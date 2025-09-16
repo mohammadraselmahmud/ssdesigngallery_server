@@ -1,0 +1,23 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.userRoutes = void 0;
+const express_1 = require("express");
+const user_controller_1 = require("./user.controller");
+const validateRequest_1 = __importDefault(require("../../middleware/validateRequest"));
+const user_validation_1 = require("./user.validation");
+const auth_1 = __importDefault(require("../../middleware/auth"));
+const user_constants_1 = require("./user.constants");
+const router = (0, express_1.Router)();
+router.post('/sign-up', (0, validateRequest_1.default)(user_validation_1.userValidation === null || user_validation_1.userValidation === void 0 ? void 0 : user_validation_1.userValidation.guestValidationSchema), user_controller_1.userController.createUser);
+router.post('/sign-in', (0, validateRequest_1.default)(user_validation_1.userValidation === null || user_validation_1.userValidation === void 0 ? void 0 : user_validation_1.userValidation.loginZodValidationSchema), user_controller_1.userController.login);
+router.post('/update-password', user_controller_1.userController.updatePassword);
+router.post('/change-password', (0, auth_1.default)(user_constants_1.USER_ROLE.admin, user_constants_1.USER_ROLE.user), user_controller_1.userController.changePassword);
+router.get('/my-profile', (0, auth_1.default)(user_constants_1.USER_ROLE.admin, user_constants_1.USER_ROLE.sub_admin, user_constants_1.USER_ROLE.super_admin, user_constants_1.USER_ROLE.user), user_controller_1.userController.getMyProfile);
+router.post('/forget-password', user_controller_1.userController.forgotPassword);
+router.put('/updateUser', (0, auth_1.default)(user_constants_1.USER_ROLE.admin, user_constants_1.USER_ROLE.sub_admin, user_constants_1.USER_ROLE.super_admin, user_constants_1.USER_ROLE.user), user_controller_1.userController.updateUser);
+router.post('/verify', user_controller_1.userController.verifyOtp);
+router.get('/', (0, auth_1.default)(user_constants_1.USER_ROLE.admin), user_controller_1.userController.getAllUser);
+exports.userRoutes = router;
