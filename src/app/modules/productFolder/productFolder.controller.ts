@@ -6,6 +6,7 @@ import { storeFile } from '../../utils/fileHelper';
 import { uploadToS3 } from '../../utils/s3';
 
 const createProductFolder = catchAsync(async (req: Request, res: Response) => {
+  req.body['userId'] = req.user.userId;
   const result = await productFolderService.createProductFolder(req.body);
   sendResponse(res, {
     statusCode: 201,

@@ -32,7 +32,8 @@ const getAllProducts = catchAsync(async (req: Request, res: Response) => {
 
 const getCategoryWiseProduct = catchAsync(
   async (req: Request, res: Response) => {
-    req.query['category'] = req.params.id;
+    req.query['categoryId'] = req.params.id;
+    console.log(req.query);
     const result = await productsService.getAllProducts(req.query);
     sendResponse(res, {
       statusCode: 200,
