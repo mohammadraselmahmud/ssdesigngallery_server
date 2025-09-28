@@ -25,7 +25,7 @@ const createCategory = async (payload: ICategory) => {
 };
 
 const getAllCategories = async (query: Record<string, any>) => {
-  query['query']="createdAt";
+  query['sort']="createdAt";
   const categoriesModel = new QueryBuilder(
     Category.find({ isDeleted: false }),
     query,
