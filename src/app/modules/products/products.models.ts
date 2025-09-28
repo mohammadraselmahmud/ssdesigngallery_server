@@ -14,6 +14,10 @@ const productsSchema = new Schema<IProducts>(
       type: String,
       required: [true, 'Product image must be required'],
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
     productPrice: {
       type: Number,
       required: [true, 'Product price must be required'],

@@ -125,12 +125,13 @@ const deleteProductFromFolder = async (params: Record<string, any>) => {
     { $pull: { products: { productId } } },
     { new: true },
   );
-  console.log('🚀 ~ deleteProductFromFolder ~ folder:', folder);
 
   if (!folder) {
     new AppError(404, 'Folder or product not found');
   }
-
+  if (folder?.products?.length === 0) {
+    const result = await ProductFolder?.findByIdAndDelete(folder?._id);
+  }
   return folder;
 };
 

@@ -8,6 +8,7 @@ export interface IProducts {
   productPrice: number;
   note?: string;
   categoryId: ObjectId | ICategory;
+  isDeleted: boolean;
 }
 
 export type IProductsModules = Model<IProducts, Record<string, unknown>>;

@@ -13,7 +13,10 @@ const createProducts = async (payload: IProducts) => {
 };
 
 const getAllProducts = async (query: Record<string, any>) => {
-  const productsModel = new QueryBuilder(Products.find({}), query)
+  const productsModel = new QueryBuilder(
+    Products.find({ isDeleted: false }),
+    query,
+  )
     .search(['productName', 'productDescription'])
     .filter()
     .paginate()
@@ -28,7 +31,7 @@ const getAllProducts = async (query: Record<string, any>) => {
 
 const getProductsById = async (id: string) => {
   const result = await Products.findById(id);
-  if (!result) {
+  if (!result || result?.isDeleted) {
     throw new AppError(httpStatus.NOT_FOUND, 'Products not found!');
   }
   return result;
@@ -43,7 +46,7 @@ const updateProducts = async (id: string, payload: Partial<IProducts>) => {
 };
 
 const deleteProducts = async (id: string) => {
-  const result = await Products.findByIdAndDelete(id);
+  const result = await Products.findByIdAndUpdate(id, { isDeleted: true });
   if (!result) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Failed to delete products');
   }
@@ -52,6 +55,11 @@ const deleteProducts = async (id: string) => {
 
 const findKeywords = async () => {
   const uniqueKeywords = await Products.aggregate([
+    {
+      $match: {
+        isDeleted: false,
+      },
+    },
     { $unwind: '$productDescription' },
 
     {

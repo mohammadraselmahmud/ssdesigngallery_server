@@ -25,7 +25,7 @@ const createWishlist = async (payload: IWishlist) => {
 
 const getAllWishlist = async (query: Record<string, any>) => {
   const wishlistModel = new QueryBuilder(
-    Wishlist.find().populate('productId'),
+    Wishlist.find().populate([{ path: 'productId' }]),
     query,
   )
     .search([''])
@@ -44,7 +44,7 @@ const getAllWishlist = async (query: Record<string, any>) => {
 };
 
 const getWishlistById = async (id: string) => {
-  const result = await Wishlist.findById(id).populate('productId');
+  const result = await Wishlist.findById(id).populate([{ path: 'productId' }]);
   if (!result) {
     throw new Error('Wishlist not found!');
   }

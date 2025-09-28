@@ -7,8 +7,14 @@ import AppError from '../../error/AppError';
 
 const createCategory = async (payload: ICategory) => {
   const category = await Category.isExistByName(payload?.name);
-  if (category) {
+  if (category && !category?.isDeleted) {
     throw new AppError(httpStatus.BAD_REQUEST, 'This category already exist');
+  }
+  if (category?.isDeleted) {
+    const result = await Category.findByIdAndUpdate(category?._id, payload, {
+      new: true,
+    });
+    return result;
   }
 
   const result = await Category.create(payload);
@@ -19,7 +25,11 @@ const createCategory = async (payload: ICategory) => {
 };
 
 const getAllCategories = async (query: Record<string, any>) => {
-  const categoriesModel = new QueryBuilder(Category.find(), query)
+  query['query']="createdAt";
+  const categoriesModel = new QueryBuilder(
+    Category.find({ isDeleted: false }),
+    query,
+  )
     .search(['name'])
     .filter()
     .paginate()
@@ -34,7 +44,7 @@ const getAllCategories = async (query: Record<string, any>) => {
 
 const getCategoryById = async (id: string) => {
   const result = await Category.findById(id);
-  if (!result) {
+  if (!result || result?.isDeleted) {
     throw new Error('Category not found');
   }
   return result;
@@ -49,7 +59,7 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
 };
 
 const deleteCategory = async (id: string) => {
-  const result = await Category.findByIdAndDelete(id);
+  const result = await Category.findByIdAndUpdate(id, { isDeleted: false });
   if (!result) {
     throw new AppError(httpStatus?.BAD_REQUEST, 'Failed to delete category');
   }
