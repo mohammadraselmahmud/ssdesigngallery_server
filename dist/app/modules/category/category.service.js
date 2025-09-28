@@ -36,7 +36,7 @@ const createCategory = (payload) => __awaiter(void 0, void 0, void 0, function* 
     return result;
 });
 const getAllCategories = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    query['query'] = "createdAt";
+    query['sort'] = "createdAt";
     const categoriesModel = new QueryBuilder_1.default(category_models_1.default.find({ isDeleted: false }), query)
         .search(['name'])
         .filter()
