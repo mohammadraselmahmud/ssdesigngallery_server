@@ -26,7 +26,8 @@ export const uploadToS3 = async (
       throw new AppError(httpStatus.BAD_REQUEST, 'File Upload failed');
     }
 
-    const url = `https://${config.aws.bucket}.s3.${config.aws.region}.amazonaws.com/${fileName}`;
+    // const url = `https://${config.aws.bucket}.s3.${config.aws.region}.amazonaws.com/${fileName}`;
+    const url = `https://${config.aws.cloudFront}.cloudfront.net/${fileName}`;
 
     return url;
   } catch (error) {

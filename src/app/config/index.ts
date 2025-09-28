@@ -7,6 +7,7 @@ const aws = {
   secretAccessKey: process.env.S3_BUCKET_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION,
   bucket: process.env.AWS_BUCKET_NAME,
+  cloudFront: process.env.AWS_CLOUD_FRONT,
 };
 
 const stripe = {
