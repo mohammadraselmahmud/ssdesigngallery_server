@@ -25,7 +25,7 @@ const createProducts = (payload) => __awaiter(void 0, void 0, void 0, function* 
     return result;
 });
 const getAllProducts = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const productsModel = new QueryBuilder_1.default(products_models_1.default.find({}), query)
+    const productsModel = new QueryBuilder_1.default(products_models_1.default.find({ isDeleted: false }), query)
         .search(['productName', 'productDescription'])
         .filter()
         .paginate()
@@ -37,7 +37,7 @@ const getAllProducts = (query) => __awaiter(void 0, void 0, void 0, function* ()
 });
 const getProductsById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield products_models_1.default.findById(id);
-    if (!result) {
+    if (!result || (result === null || result === void 0 ? void 0 : result.isDeleted)) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Products not found!');
     }
     return result;
@@ -50,7 +50,7 @@ const updateProducts = (id, payload) => __awaiter(void 0, void 0, void 0, functi
     return result;
 });
 const deleteProducts = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield products_models_1.default.findByIdAndDelete(id);
+    const result = yield products_models_1.default.findByIdAndUpdate(id, { isDeleted: true });
     if (!result) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'Failed to delete products');
     }
@@ -58,6 +58,11 @@ const deleteProducts = (id) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const findKeywords = () => __awaiter(void 0, void 0, void 0, function* () {
     const uniqueKeywords = yield products_models_1.default.aggregate([
+        {
+            $match: {
+                isDeleted: false,
+            },
+        },
         { $unwind: '$productDescription' },
         {
             $group: {

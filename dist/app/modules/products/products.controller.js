@@ -42,7 +42,8 @@ const getAllProducts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
     });
 }));
 const getCategoryWiseProduct = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    req.query['category'] = req.params.id;
+    req.query['categoryId'] = req.params.id;
+    console.log(req.query);
     const result = yield products_service_1.productsService.getAllProducts(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,

@@ -13,6 +13,10 @@ const productsSchema = new mongoose_1.Schema({
         type: String,
         required: [true, 'Product image must be required'],
     },
+    isDeleted: {
+        type: Boolean,
+        default: false,
+    },
     productPrice: {
         type: Number,
         required: [true, 'Product price must be required'],

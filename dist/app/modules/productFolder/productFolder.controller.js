@@ -17,6 +17,7 @@ const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const productFolder_service_1 = require("./productFolder.service");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const createProductFolder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    req.body['userId'] = req.user.userId;
     const result = yield productFolder_service_1.productFolderService.createProductFolder(req.body);
     (0, sendResponse_1.default)(res, {
         statusCode: 201,

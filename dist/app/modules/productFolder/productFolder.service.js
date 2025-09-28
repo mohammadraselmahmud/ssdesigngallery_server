@@ -97,10 +97,15 @@ const deleteProductFolder = (id) => __awaiter(void 0, void 0, void 0, function* 
     return result;
 });
 const deleteProductFromFolder = (params) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { folderId, productId } = params;
+    console.log(params);
     const folder = yield productFolder_models_1.default.findOneAndUpdate({ _id: folderId, 'products.productId': productId }, { $pull: { products: { productId } } }, { new: true });
     if (!folder) {
         new AppError_1.default(404, 'Folder or product not found');
+    }
+    if (((_a = folder === null || folder === void 0 ? void 0 : folder.products) === null || _a === void 0 ? void 0 : _a.length) === 0) {
+        const result = yield (productFolder_models_1.default === null || productFolder_models_1.default === void 0 ? void 0 : productFolder_models_1.default.findByIdAndDelete(folder === null || folder === void 0 ? void 0 : folder._id));
     }
     return folder;
 });

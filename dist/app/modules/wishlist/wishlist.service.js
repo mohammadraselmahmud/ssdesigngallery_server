@@ -35,7 +35,7 @@ const createWishlist = (payload) => __awaiter(void 0, void 0, void 0, function* 
     return result;
 });
 const getAllWishlist = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const wishlistModel = new QueryBuilder_1.default(wishlist_models_1.default.find(), query)
+    const wishlistModel = new QueryBuilder_1.default(wishlist_models_1.default.find().populate([{ path: 'productId' }]), query)
         .search([''])
         .filter()
         .paginate()
@@ -49,7 +49,7 @@ const getAllWishlist = (query) => __awaiter(void 0, void 0, void 0, function* ()
     };
 });
 const getWishlistById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield wishlist_models_1.default.findById(id);
+    const result = yield wishlist_models_1.default.findById(id).populate([{ path: 'productId' }]);
     if (!result) {
         throw new Error('Wishlist not found!');
     }

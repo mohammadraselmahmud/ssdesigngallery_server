@@ -20,8 +20,14 @@ const QueryBuilder_1 = __importDefault(require("../../class/builder/QueryBuilder
 const AppError_1 = __importDefault(require("../../error/AppError"));
 const createCategory = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const category = yield category_models_1.default.isExistByName(payload === null || payload === void 0 ? void 0 : payload.name);
-    if (category) {
+    if (category && !(category === null || category === void 0 ? void 0 : category.isDeleted)) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'This category already exist');
+    }
+    if (category === null || category === void 0 ? void 0 : category.isDeleted) {
+        const result = yield category_models_1.default.findByIdAndUpdate(category === null || category === void 0 ? void 0 : category._id, payload, {
+            new: true,
+        });
+        return result;
     }
     const result = yield category_models_1.default.create(payload);
     if (!result) {
@@ -30,7 +36,8 @@ const createCategory = (payload) => __awaiter(void 0, void 0, void 0, function* 
     return result;
 });
 const getAllCategories = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const categoriesModel = new QueryBuilder_1.default(category_models_1.default.find(), query)
+    query['query'] = "createdAt";
+    const categoriesModel = new QueryBuilder_1.default(category_models_1.default.find({ isDeleted: false }), query)
         .search(['name'])
         .filter()
         .paginate()
@@ -42,7 +49,7 @@ const getAllCategories = (query) => __awaiter(void 0, void 0, void 0, function* 
 });
 const getCategoryById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield category_models_1.default.findById(id);
-    if (!result) {
+    if (!result || (result === null || result === void 0 ? void 0 : result.isDeleted)) {
         throw new Error('Category not found');
     }
     return result;
@@ -55,7 +62,7 @@ const updateCategory = (id, payload) => __awaiter(void 0, void 0, void 0, functi
     return result;
 });
 const deleteCategory = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield category_models_1.default.findByIdAndDelete(id);
+    const result = yield category_models_1.default.findByIdAndUpdate(id, { isDeleted: false });
     if (!result) {
         throw new AppError_1.default(http_status_1.default === null || http_status_1.default === void 0 ? void 0 : http_status_1.default.BAD_REQUEST, 'Failed to delete category');
     }
