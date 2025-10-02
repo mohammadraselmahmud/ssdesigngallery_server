@@ -59,7 +59,7 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
 };
 
 const deleteCategory = async (id: string) => {
-  const result = await Category.findByIdAndUpdate(id, { isDeleted: false });
+  const result = await Category.findByIdAndUpdate(id, { isDeleted: true });
   if (!result) {
     throw new AppError(httpStatus?.BAD_REQUEST, 'Failed to delete category');
   }
