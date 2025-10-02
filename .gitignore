@@ -5,6 +5,4 @@ logs/
 .vercel
 nn.ts
 .vercel
-**/dist
 dist/*
-dist

@@ -62,7 +62,7 @@ const updateCategory = (id, payload) => __awaiter(void 0, void 0, void 0, functi
     return result;
 });
 const deleteCategory = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield category_models_1.default.findByIdAndUpdate(id, { isDeleted: false });
+    const result = yield category_models_1.default.findByIdAndUpdate(id, { isDeleted: true });
     if (!result) {
         throw new AppError_1.default(http_status_1.default === null || http_status_1.default === void 0 ? void 0 : http_status_1.default.BAD_REQUEST, 'Failed to delete category');
     }
