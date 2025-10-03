@@ -11,9 +11,13 @@ const createCategory = async (payload: ICategory) => {
     throw new AppError(httpStatus.BAD_REQUEST, 'This category already exist');
   }
   if (category?.isDeleted) {
-    const result = await Category.findByIdAndUpdate(category?._id, payload, {
-      new: true,
-    });
+    const result = await Category.findByIdAndUpdate(
+      category?._id,
+      { ...payload, isDeleted: false },
+      {
+        new: true,
+      },
+    );
     return result;
   }
 
@@ -25,7 +29,7 @@ const createCategory = async (payload: ICategory) => {
 };
 
 const getAllCategories = async (query: Record<string, any>) => {
-  query['sort']="createdAt";
+  query['sort'] = 'createdAt';
   const categoriesModel = new QueryBuilder(
     Category.find({ isDeleted: false }),
     query,

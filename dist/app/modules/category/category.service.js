@@ -24,7 +24,7 @@ const createCategory = (payload) => __awaiter(void 0, void 0, void 0, function* 
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'This category already exist');
     }
     if (category === null || category === void 0 ? void 0 : category.isDeleted) {
-        const result = yield category_models_1.default.findByIdAndUpdate(category === null || category === void 0 ? void 0 : category._id, payload, {
+        const result = yield category_models_1.default.findByIdAndUpdate(category === null || category === void 0 ? void 0 : category._id, Object.assign(Object.assign({}, payload), { isDeleted: false }), {
             new: true,
         });
         return result;
@@ -36,7 +36,7 @@ const createCategory = (payload) => __awaiter(void 0, void 0, void 0, function* 
     return result;
 });
 const getAllCategories = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    query['sort'] = "createdAt";
+    query['sort'] = 'createdAt';
     const categoriesModel = new QueryBuilder_1.default(category_models_1.default.find({ isDeleted: false }), query)
         .search(['name'])
         .filter()
