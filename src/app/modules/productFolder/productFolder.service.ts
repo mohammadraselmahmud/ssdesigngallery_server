@@ -23,8 +23,9 @@ const createProductFolder = async (payload: any) => {
       p => p.productId.toString() === payload.productId,
     );
     if (!productExists) {
-      payload.products.push({ productId, note }); // Add the product with its note
-      await isExist.save();
+       isExist.products.push({ productId, note }); 
+       await isExist.save();
+   
     }
 
     return isExist;
