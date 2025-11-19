@@ -25,6 +25,13 @@ const login = async (payload: TLogin) => {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
 
+   if (user?.registerWithGoogle) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'this user registered with Google not manually',
+    );
+  }
+
   if (!(await User.isPasswordMatched(payload.password, user.password))) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Password does not match');
   }
@@ -67,6 +74,76 @@ const createUser = async (payload: IUser): Promise<IUser> => {
     throw new AppError(httpStatus.BAD_REQUEST, 'User creation failed');
   }
   return user;
+};
+
+const signInWithGoogle = async (payload:any) => {
+  const user = await User.isUserExist(payload.email);
+
+  if (!user) {
+    const userData = {
+      email: payload.email,
+      name: payload.name,
+      emailVerified:true,
+      registerWithGoogle: true, 
+    };
+    const user: IUser | null = await User.create(userData);
+    if (!user) {
+      throw new AppError(httpStatus.FORBIDDEN, 'user register failed!');
+    }
+    const jwtPayload: { userId: string; role: string } = {
+      userId: user?._id?.toString() as string,
+      role: user?.role,
+    };
+
+    const accessToken = createToken(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      config.jwt_access_expires_in as string,
+    );
+
+    const refreshToken = createToken(
+      jwtPayload,
+      config.jwt_refresh_secret as string,
+      config.jwt_refresh_expires_in as string,
+    );
+
+    return {
+      user,
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  if (!user?.registerWithGoogle) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'this user register with email and password.',
+    );
+  }
+
+ 
+  const jwtPayload: { userId: string; role: string } = {
+    userId: user?._id?.toString() as string,
+    role: user?.role,
+  };
+
+  const accessToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    config.jwt_access_expires_in as string,
+  );
+
+  const refreshToken = createToken(
+    jwtPayload,
+    config.jwt_refresh_secret as string,
+    config.jwt_refresh_expires_in as string,
+  );
+
+  return {
+    user,
+    accessToken,
+    refreshToken,
+  };
 };
 
 const forgotPassword = async (payload: IUser) => {
@@ -256,6 +333,6 @@ export const userService = {
   updateUser,
   geUserById,
   changePassword,
-  getAllUser,
+  getAllUser,signInWithGoogle
   // deleteUser,
 };

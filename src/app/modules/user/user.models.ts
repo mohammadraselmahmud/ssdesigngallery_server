@@ -21,7 +21,7 @@ const userSchema: Schema<IUser> = new Schema(
 
     phoneNumber: {
       type: String,
-      required: true,
+      required: false,
       default: null,
     },
 
@@ -32,6 +32,10 @@ const userSchema: Schema<IUser> = new Schema(
     emailVerified: {
       type: Boolean, 
       default:null
+    },
+      registerWithGoogle: {
+      type: Boolean,
+      default: false,
     },
 
     role: {
@@ -53,7 +57,8 @@ const userSchema: Schema<IUser> = new Schema(
 userSchema.pre('save', async function (next) {
   // eslint-disable-next-line @typescript-eslint/no-this-alias
   const user = this;
-  if (user) {
+
+  if (!user?.registerWithGoogle) {
     user.password = await bcrypt.hash(
       user.password,
       Number(config.bcrypt_salt_rounds),
@@ -61,6 +66,17 @@ userSchema.pre('save', async function (next) {
   }
   next();
 });
+// userSchema.pre('save', async function (next) {
+//   // eslint-disable-next-line @typescript-eslint/no-this-alias
+//   const user = this;
+//   if (user) {
+//     user.password = await bcrypt.hash(
+//       user.password,
+//       Number(config.bcrypt_salt_rounds),
+//     );
+//   }
+//   next();
+// });
 
 // set '' after saving password
 userSchema.post(

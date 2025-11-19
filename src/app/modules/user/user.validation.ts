@@ -12,6 +12,15 @@ const guestValidationSchema = z.object({
     password: z.string({ required_error: 'Password is required' }),
   }),
 });
+const googleLoginValidation = z.object({
+  body: z.object({
+    name: z.string({ required_error: 'name is required' }),
+    email: z
+      .string({ required_error: 'Email is required' })
+      .email({ message: 'Invalid email address' }), 
+    role: z.enum([...Role] as [string, ...string[]]).default(USER_ROLE.user), 
+  }),
+});
 
 const loginZodValidationSchema = z.object({
   body: z.object({
@@ -25,5 +34,5 @@ const loginZodValidationSchema = z.object({
 });
 export const userValidation = {
   guestValidationSchema,
-  loginZodValidationSchema,
+  loginZodValidationSchema,googleLoginValidation
 };

@@ -17,6 +17,11 @@ router.post(
   validateRequest(userValidation?.loginZodValidationSchema),
   userController.login,
 );
+router.post(
+  '/google-login', 
+  validateRequest(userValidation?.googleLoginValidation),
+  userController.signInWithGoogle,
+);
 router.post('/update-password', userController.updatePassword);
 router.post(
   '/change-password',

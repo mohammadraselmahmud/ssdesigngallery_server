@@ -24,6 +24,16 @@ const login = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const signInWithGoogle = catchAsync(async (req: Request, res: Response) => {
+  const result = await userService.signInWithGoogle(req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User login successfully',
+    data: result,
+  });
+});
+
 const getMyProfile = catchAsync(async (req: Request, res: Response) => {
   const result = await userService.geUserById(req?.user?.userId);
   sendResponse(res, {
@@ -112,6 +122,6 @@ export const userController = {
   updatePassword,
   changePassword,
 
-  getAllUser,
+  getAllUser,signInWithGoogle
   // getUserById,
 };

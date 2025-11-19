@@ -7,6 +7,7 @@ export interface IUser {
   email: string;
   phoneNumber: string;
   password: string;
+  registerWithGoogle: boolean;
   role: string;
   oneTimeCode: string;
   emailVerified: boolean;
