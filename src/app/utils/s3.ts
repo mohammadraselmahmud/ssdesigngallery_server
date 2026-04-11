@@ -19,7 +19,7 @@ export const uploadToS3 = async (
     Key: fileName,
     Body: file.buffer,
     ContentType: file.mimetype,
-    ACL: ObjectCannedACL.public_read, //access public read
+    // ACL: ObjectCannedACL.public_read, //access public read
   });
 
   try {
