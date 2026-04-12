@@ -28,7 +28,7 @@ export const uploadToS3 = async (
     if (!key) {
       throw new AppError(httpStatus.BAD_REQUEST, 'File Upload failed');
     }
-    const url = `${config?.aws?.s3BaseUrl}/${fileName}`;
+    const url = `${config?.aws?.img_base_url}/${fileName}`;
 
     return url;
   } catch (error) {
@@ -74,12 +74,12 @@ export const uploadManyToS3 = async (
         Key: fileKey,
         Body: file?.buffer,
         ContentType: file.mimetype,
-        ACL: ObjectCannedACL.public_read, //access public read
+        // ACL: ObjectCannedACL.public_read, //access public read
       });
 
       const nn = await s3Client.send(command);
-      // const url = `${config?.aws?.s3BaseUrl}/${fileKey}`;
-      const url = `${config?.aws?.s3BaseUrl}/${fileKey}`;
+      // const url = `${config?.aws?.img_base_url}/${fileKey}`;
+      const url = `${config?.aws?.img_base_url}/${fileKey}`;
       return { url, key: newFileName };
     });
 
