@@ -31,7 +31,7 @@ const userSchema = new mongoose_1.Schema({
     },
     phoneNumber: {
         type: String,
-        required: true,
+        required: false,
         default: null,
     },
     password: {
@@ -41,6 +41,10 @@ const userSchema = new mongoose_1.Schema({
     emailVerified: {
         type: Boolean,
         default: null
+    },
+    registerWithGoogle: {
+        type: Boolean,
+        default: false,
     },
     role: {
         type: String,
@@ -59,12 +63,23 @@ userSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const user = this;
-        if (user) {
+        if (!(user === null || user === void 0 ? void 0 : user.registerWithGoogle)) {
             user.password = yield bcrypt_1.default.hash(user.password, Number(config_1.default.bcrypt_salt_rounds));
         }
         next();
     });
 });
+// userSchema.pre('save', async function (next) {
+//   // eslint-disable-next-line @typescript-eslint/no-this-alias
+//   const user = this;
+//   if (user) {
+//     user.password = await bcrypt.hash(
+//       user.password,
+//       Number(config.bcrypt_salt_rounds),
+//     );
+//   }
+//   next();
+// });
 // set '' after saving password
 userSchema.post('save', 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

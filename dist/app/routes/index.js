@@ -7,6 +7,10 @@ const products_route_1 = require("../modules/products/products.route");
 const wishlist_route_1 = require("../modules/wishlist/wishlist.route");
 const slider_route_1 = require("../modules/slider/slider.route");
 const productFolder_route_1 = require("../modules/productFolder/productFolder.route");
+const ads_route_1 = require("../modules/ads/ads.route");
+const subscription_route_1 = require("../modules/subscription/subscription.route");
+const payment_route_1 = require("../modules/payment/payment.route");
+const package_route_1 = require("../modules/package/package.route");
 const router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -32,6 +36,22 @@ const moduleRoutes = [
     {
         path: '/product-folder',
         route: productFolder_route_1.productFolderRoutes,
+    },
+    {
+        path: '/ads',
+        route: ads_route_1.adsRoutes,
+    },
+    {
+        path: '/package',
+        route: package_route_1.packageRoutes,
+    },
+    {
+        path: '/subscription',
+        route: subscription_route_1.subscriptionRoutes,
+    },
+    {
+        path: '/payment',
+        route: payment_route_1.paymentRoutes,
     },
 ];
 moduleRoutes.forEach(route => router.use(route.path, route.route));

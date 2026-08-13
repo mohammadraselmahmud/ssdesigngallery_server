@@ -1,0 +1,582 @@
+{
+  "info": {
+    "name": "SS Design Gallery API",
+    "description": "Collection for Ads, Package, Subscription, Payment, User, Auth, and OTP APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Ads",
+      "item": [
+        {
+          "name": "Create Ads (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Summer Sale\",\n  \"description\": \"Special discount offer\",\n  \"image\": \"https://example.com/ads.jpg\",\n  \"video\": \"\",\n  \"isActive\": true,\n  \"expiredAt\": \"2026-12-31T23:59:59.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ads",
+              "host": ["{{baseUrl}}"],
+              "path": ["ads"]
+            }
+          }
+        },
+        {
+          "name": "Update Ads (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Ad\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ads/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["ads", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Delete Ads (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ads/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["ads", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Get Ads By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ads/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["ads", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Get All Ads (Admin Listing)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ads",
+              "host": ["{{baseUrl}}"],
+              "path": ["ads"]
+            }
+          }
+        },
+        {
+          "name": "Get Public Ads (App)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ads/public?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["ads", "public"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscription",
+      "item": [
+        {
+          "name": "Create Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": \"64f0a1b2c3d4e5f607182930\",\n  \"package\": \"64f0a1b2c3d4e5f607182931\",\n  \"startDate\": \"2026-08-04T00:00:00.000Z\",\n  \"endDate\": \"2026-09-04T00:00:00.000Z\",\n  \"status\": \"active\",\n  \"isActive\": true,\n  \"isExpired\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/subscription",
+              "host": ["{{baseUrl}}"],
+              "path": ["subscription"]
+            }
+          }
+        },
+        {
+          "name": "Get All Subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/subscription",
+              "host": ["{{baseUrl}}"],
+              "path": ["subscription"]
+            }
+          }
+        },
+        {
+          "name": "Get Subscription By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/subscription/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["subscription", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Update Subscription",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/subscription/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["subscription", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Delete Subscription",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/subscription/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["subscription", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Package",
+      "item": [
+        {
+          "name": "Create Package (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Premium\",\n  \"productId\": \"prod_001\",\n  \"description\": \"Premium package\",\n  \"price\": 999,\n  \"isRecommended\": true,\n  \"totalDays\": 30,\n  \"limit\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/package",
+              "host": ["{{baseUrl}}"],
+              "path": ["package"]
+            }
+          }
+        },
+        {
+          "name": "Get All Packages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/package",
+              "host": ["{{baseUrl}}"],
+              "path": ["package"]
+            }
+          }
+        },
+        {
+          "name": "Get Package By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/package/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["package", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Update Package (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/package/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["package", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Delete Package (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/package/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["package", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User & Auth",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phoneNumber\": \"01700000000\",\n  \"password\": \"123456\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/sign-up",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "sign-up"]
+            }
+          }
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/sign-in",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "sign-in"]
+            }
+          }
+        },
+        {
+          "name": "Google Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"name\": \"John Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/google-login",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "google-login"]
+            }
+          }
+        },
+        {
+          "name": "Forget Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/forget-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "forget-password"]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"oneTimeCode\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/my-profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "my-profile"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "item": [
+        {
+          "name": "Initialize Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"aamarpay\",\n  \"amount\": 1000,\n  \"currency\": \"BDT\",\n  \"orderId\": \"order_001\",\n  \"customerName\": \"John Doe\",\n  \"customerEmail\": \"john@example.com\",\n  \"customerPhone\": \"01700000000\",\n  \"successUrl\": \"http://localhost:3000/payment/success\",\n  \"cancelUrl\": \"http://localhost:3000/payment/cancel\",\n  \"metadata\": {\n    \"userId\": \"64f0a1b2c3d4e5f607182930\",\n    \"packageId\": \"64f0a1b2c3d4e5f607182931\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payment/init",
+              "host": ["{{baseUrl}}"],
+              "path": ["payment", "init"]
+            }
+          }
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"aamarpay\",\n  \"orderId\": \"order_001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payment/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["payment", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Payment Success Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payment/success?orderId=order_001&provider=aamarpay&userId=64f0a1b2c3d4e5f607182930&packageId=64f0a1b2c3d4e5f607182931&redirectUrl=http://localhost:3000/payment/success",
+              "host": ["{{baseUrl}}"],
+              "path": ["payment", "success"],
+              "query": [
+                {
+                  "key": "orderId",
+                  "value": "order_001"
+                },
+                {
+                  "key": "provider",
+                  "value": "aamarpay"
+                },
+                {
+                  "key": "userId",
+                  "value": "64f0a1b2c3d4e5f607182930"
+                },
+                {
+                  "key": "packageId",
+                  "value": "64f0a1b2c3d4e5f607182931"
+                },
+                {
+                  "key": "redirectUrl",
+                  "value": "http://localhost:3000/payment/success"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Payment Cancel Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payment/cancel?orderId=order_001&redirectUrl=http://localhost:3000/payment/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["payment", "cancel"],
+              "query": [
+                {
+                  "key": "orderId",
+                  "value": "order_001"
+                },
+                {
+                  "key": "redirectUrl",
+                  "value": "http://localhost:3000/payment/cancel"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

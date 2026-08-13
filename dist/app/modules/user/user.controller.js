@@ -35,6 +35,15 @@ const login = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, 
         data: result,
     });
 }));
+const signInWithGoogle = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_service_1.userService.signInWithGoogle(req.body);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'User login successfully',
+        data: result,
+    });
+}));
 const getMyProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const result = yield user_service_1.userService.geUserById((_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.userId);
@@ -117,6 +126,6 @@ exports.userController = {
     updateUser,
     updatePassword,
     changePassword,
-    getAllUser,
+    getAllUser, signInWithGoogle
     // getUserById,
 };

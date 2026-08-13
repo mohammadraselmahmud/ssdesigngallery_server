@@ -31,7 +31,7 @@ const createProductFolder = (payload) => __awaiter(void 0, void 0, void 0, funct
     if (isExist) {
         const productExists = isExist.products.some(p => p.productId.toString() === payload.productId);
         if (!productExists) {
-            payload.products.push({ productId, note }); // Add the product with its note
+            isExist.products.push({ productId, note });
             yield isExist.save();
         }
         return isExist;

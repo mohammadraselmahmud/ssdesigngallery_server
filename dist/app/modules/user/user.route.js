@@ -13,6 +13,7 @@ const user_constants_1 = require("./user.constants");
 const router = (0, express_1.Router)();
 router.post('/sign-up', (0, validateRequest_1.default)(user_validation_1.userValidation === null || user_validation_1.userValidation === void 0 ? void 0 : user_validation_1.userValidation.guestValidationSchema), user_controller_1.userController.createUser);
 router.post('/sign-in', (0, validateRequest_1.default)(user_validation_1.userValidation === null || user_validation_1.userValidation === void 0 ? void 0 : user_validation_1.userValidation.loginZodValidationSchema), user_controller_1.userController.login);
+router.post('/google-login', (0, validateRequest_1.default)(user_validation_1.userValidation === null || user_validation_1.userValidation === void 0 ? void 0 : user_validation_1.userValidation.googleLoginValidation), user_controller_1.userController.signInWithGoogle);
 router.post('/update-password', user_controller_1.userController.updatePassword);
 router.post('/change-password', (0, auth_1.default)(user_constants_1.USER_ROLE.admin, user_constants_1.USER_ROLE.user), user_controller_1.userController.changePassword);
 router.get('/my-profile', (0, auth_1.default)(user_constants_1.USER_ROLE.admin, user_constants_1.USER_ROLE.sub_admin, user_constants_1.USER_ROLE.super_admin, user_constants_1.USER_ROLE.user), user_controller_1.userController.getMyProfile);

@@ -31,6 +31,9 @@ const login = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
     }
+    if (user === null || user === void 0 ? void 0 : user.registerWithGoogle) {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'this user registered with Google not manually');
+    }
     if (!(yield user_models_1.User.isPasswordMatched(payload.password, user.password))) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'Password does not match');
     }
@@ -56,6 +59,47 @@ const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'User creation failed');
     }
     return user;
+});
+const signInWithGoogle = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const user = yield user_models_1.User.isUserExist(payload.email);
+    if (!user) {
+        const userData = {
+            email: payload.email,
+            name: payload.name,
+            emailVerified: true,
+            registerWithGoogle: true,
+        };
+        const user = yield user_models_1.User.create(userData);
+        if (!user) {
+            throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'user register failed!');
+        }
+        const jwtPayload = {
+            userId: (_a = user === null || user === void 0 ? void 0 : user._id) === null || _a === void 0 ? void 0 : _a.toString(),
+            role: user === null || user === void 0 ? void 0 : user.role,
+        };
+        const accessToken = (0, user_utils_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, config_1.default.jwt_access_expires_in);
+        const refreshToken = (0, user_utils_1.createToken)(jwtPayload, config_1.default.jwt_refresh_secret, config_1.default.jwt_refresh_expires_in);
+        return {
+            user,
+            accessToken,
+            refreshToken,
+        };
+    }
+    if (!(user === null || user === void 0 ? void 0 : user.registerWithGoogle)) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'this user register with email and password.');
+    }
+    const jwtPayload = {
+        userId: (_b = user === null || user === void 0 ? void 0 : user._id) === null || _b === void 0 ? void 0 : _b.toString(),
+        role: user === null || user === void 0 ? void 0 : user.role,
+    };
+    const accessToken = (0, user_utils_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, config_1.default.jwt_access_expires_in);
+    const refreshToken = (0, user_utils_1.createToken)(jwtPayload, config_1.default.jwt_refresh_secret, config_1.default.jwt_refresh_expires_in);
+    return {
+        user,
+        accessToken,
+        refreshToken,
+    };
 });
 const forgotPassword = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_models_1.User.isUserExist(payload === null || payload === void 0 ? void 0 : payload.email);
@@ -187,6 +231,6 @@ exports.userService = {
     updateUser,
     geUserById,
     changePassword,
-    getAllUser,
+    getAllUser, signInWithGoogle
     // deleteUser,
 };

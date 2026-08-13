@@ -28,14 +28,14 @@ const uploadToS3 = (_a) => __awaiter(void 0, [_a], void 0, function* (
         Key: fileName,
         Body: file.buffer,
         ContentType: file.mimetype,
-        ACL: client_s3_1.ObjectCannedACL.public_read, //access public read
+        // ACL: ObjectCannedACL.public_read, //access public read
     });
     try {
         const key = yield aws_1.s3Client.send(command);
         if (!key) {
             throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'File Upload failed');
         }
-        const url = `${(_b = config_1.default === null || config_1.default === void 0 ? void 0 : config_1.default.aws) === null || _b === void 0 ? void 0 : _b.s3BaseUrl}/${fileName}`;
+        const url = `${(_b = config_1.default === null || config_1.default === void 0 ? void 0 : config_1.default.aws) === null || _b === void 0 ? void 0 : _b.img_base_url}/${fileName}`;
         return url;
     }
     catch (error) {
@@ -73,11 +73,11 @@ const uploadManyToS3 = (files) => __awaiter(void 0, void 0, void 0, function* ()
                 Key: fileKey,
                 Body: file === null || file === void 0 ? void 0 : file.buffer,
                 ContentType: file.mimetype,
-                ACL: client_s3_1.ObjectCannedACL.public_read, //access public read
+                // ACL: ObjectCannedACL.public_read, //access public read
             });
             const nn = yield aws_1.s3Client.send(command);
-            // const url = `${config?.aws?.s3BaseUrl}/${fileKey}`;
-            const url = `${(_b = config_1.default === null || config_1.default === void 0 ? void 0 : config_1.default.aws) === null || _b === void 0 ? void 0 : _b.s3BaseUrl}/${fileKey}`;
+            // const url = `${config?.aws?.img_base_url}/${fileKey}`;
+            const url = `${(_b = config_1.default === null || config_1.default === void 0 ? void 0 : config_1.default.aws) === null || _b === void 0 ? void 0 : _b.img_base_url}/${fileKey}`;
             return { url, key: newFileName };
         }));
         const uploadedUrls = yield Promise.all(uploadPromises);

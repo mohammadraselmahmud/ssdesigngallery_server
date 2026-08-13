@@ -5,6 +5,10 @@ import { productsRoutes } from '../modules/products/products.route';
 import { wishlistRoutes } from '../modules/wishlist/wishlist.route';
 import { sliderRoutes } from '../modules/slider/slider.route';
 import { productFolderRoutes } from '../modules/productFolder/productFolder.route';
+import { adsRoutes } from '../modules/ads/ads.route';
+import { subscriptionRoutes } from '../modules/subscription/subscription.route';
+import { paymentRoutes } from '../modules/payment/payment.route';
+import { packageRoutes } from '../modules/package/package.route';
 
 const router = Router();
 const moduleRoutes = [
@@ -31,6 +35,23 @@ const moduleRoutes = [
   {
     path: '/product-folder',
     route: productFolderRoutes,
+  },
+  {
+    path: '/ads',
+    route: adsRoutes,
+  },
+  {
+    path: '/package',
+    route: packageRoutes,
+  },
+  {
+    path: '/subscription',
+    route: subscriptionRoutes,
+  },
+
+  {
+    path: '/payment',
+    route: paymentRoutes,
   },
 ];
 moduleRoutes.forEach(route => router.use(route.path, route.route));
