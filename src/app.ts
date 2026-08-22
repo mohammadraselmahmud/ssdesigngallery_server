@@ -10,11 +10,10 @@ import notFound from './app/middleware/notfound';
 import router from './app/routes';
 const app: Application = express();
 app.use(express.static('public'));
-app.use(express.json({ limit: '500mb' }));
-app.use(express.urlencoded({ limit: '500mb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 //parsers
-app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
@@ -23,7 +22,6 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   }),
 );
- 
 
 // application routes
 app.use('/api', router);

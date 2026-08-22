@@ -11,9 +11,19 @@ import { paymentRoutes } from '../modules/payment/payment.route';
 import { packageRoutes } from '../modules/package/package.route';
 import { couponRoutes } from '../modules/coupon/coupon.route';
 import { adminDashboardRoutes } from '../modules/adminDashboard/adminDashboard.route';
+import { aiRoutes } from '../modules/ai/ai.routes';
+import uploadRouter from '../modules/uploads/route';
 
 const router = Router();
 const moduleRoutes = [
+  {
+    path: '/upload',
+    route: uploadRouter,
+  },
+  {
+    path: '/ai',
+    route: aiRoutes,
+  },
   {
     path: '/users',
     route: userRoutes,

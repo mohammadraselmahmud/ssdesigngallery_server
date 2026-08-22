@@ -18,6 +18,7 @@ const stripe = {
 };
 
 export default {
+  replicate_api_key: process.env.REPLICATE_API_TOKEN,
   NODE_ENV: process.env.NODE_ENV,
   port: process.env.PORT,
   ip: process.env.IP,
