@@ -34,6 +34,10 @@ const userSchema = new mongoose_1.Schema({
         required: false,
         default: null,
     },
+    profile: {
+        type: String,
+        default: null,
+    },
     password: {
         type: String,
         required: false,

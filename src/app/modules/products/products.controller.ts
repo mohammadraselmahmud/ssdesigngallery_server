@@ -53,6 +53,16 @@ const getByKeyWords = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getRelatedProducts = catchAsync(async (req: Request, res: Response) => {
+  const result = await productsService.findRelatedProducts(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Related products fetched successfully',
+    data: result,
+  });
+});
+
 const getMyProducts = catchAsync(async (req: Request, res: Response) => {
   req.query.user = req.user.userId;
   const result = await productsService.getAllProducts(req.query);
@@ -107,5 +117,6 @@ export const productsController = {
   deleteProducts,
   getMyProducts,
   getByKeyWords,
+  getRelatedProducts,
   getCategoryWiseProduct,
 };

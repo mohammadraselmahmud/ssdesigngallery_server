@@ -25,6 +25,7 @@ router.patch(
 router.delete('/:id', auth(USER_ROLE.admin), productsController.deleteProducts);
 
 router.get('/keywords', productsController?.getByKeyWords);
+router.get('/related', productsController.getRelatedProducts);
 router.get('/search', productsController.getAllProducts);
 router.get('/category-wise/:id', productsController.getCategoryWiseProduct);
 

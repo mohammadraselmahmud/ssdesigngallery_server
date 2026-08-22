@@ -12,6 +12,7 @@ import config from '../../config';
 import { createToken } from './user.utils';
 import path from 'path';
 import { sendEmail } from '../../utils/mailSender';
+import { subscriptionService } from '../subscription/subscription.service';
 
 export type IFilter = {
   searchTerm?: string;
@@ -25,7 +26,7 @@ const login = async (payload: TLogin) => {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
 
-   if (user?.registerWithGoogle) {
+  if (user?.registerWithGoogle) {
     throw new AppError(
       httpStatus.FORBIDDEN,
       'this user registered with Google not manually',
@@ -76,15 +77,15 @@ const createUser = async (payload: IUser): Promise<IUser> => {
   return user;
 };
 
-const signInWithGoogle = async (payload:any) => {
+const signInWithGoogle = async (payload: any) => {
   const user = await User.isUserExist(payload.email);
 
   if (!user) {
     const userData = {
       email: payload.email,
       name: payload.name,
-      emailVerified:true,
-      registerWithGoogle: true, 
+      emailVerified: true,
+      registerWithGoogle: true,
     };
     const user: IUser | null = await User.create(userData);
     if (!user) {
@@ -121,7 +122,6 @@ const signInWithGoogle = async (payload:any) => {
     );
   }
 
- 
   const jwtPayload: { userId: string; role: string } = {
     userId: user?._id?.toString() as string,
     role: user?.role,
@@ -288,12 +288,29 @@ const updateUser = async (id: string, payload: Partial<IUser>) => {
   return user;
 };
 
-const geUserById = async (id: string) => {
-  const result = await User.findById(id);
-  if (!result) {
+// const geUserById = async (id: string) => {
+//   const result = await User.findById(id);
+//   const subscription = await subscriptionService?.getCurrentPlan(id);
+//   if (!result) {
+//     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+//   }
+//   return { ...result?.toObject(), subscription: subscription };
+// };
+
+const getUserById = async (id: string) => {
+  const [user, subscription] = await Promise.all([
+    User.findById(id).lean(),
+    subscriptionService.getCurrentPlan(id),
+  ]);
+
+  if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
-  return result;
+
+  return {
+    ...user,
+    subscription: subscription ?? {},
+  };
 };
 //
 const getAllUser = async (query: Record<string, any>) => {
@@ -331,8 +348,9 @@ export const userService = {
   verifyOtp,
   updatePassword,
   updateUser,
-  geUserById,
+  getUserById,
   changePassword,
-  getAllUser,signInWithGoogle
+  getAllUser,
+  signInWithGoogle,
   // deleteUser,
 };

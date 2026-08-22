@@ -6,6 +6,7 @@ export interface IUser {
   name: string;
   email: string;
   phoneNumber: string;
+  profile?: string;
   password: string;
   registerWithGoogle: boolean;
   role: string;

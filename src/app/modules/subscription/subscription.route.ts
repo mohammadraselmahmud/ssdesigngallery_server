@@ -2,12 +2,15 @@ import { Router } from 'express';
 import { subscriptionController } from './subscription.controller';
 import auth from '../../middleware/auth';
 import { USER_ROLE } from '../user/user.constants';
+import validateRequest from '../../middleware/validateRequest';
+import { subscriptionValidation } from './subscription.validation';
 
 const router = Router();
 
 router.post(
   '/',
   auth(USER_ROLE.user),
+  validateRequest(subscriptionValidation.createSubscriptionSchema),
   subscriptionController.createSubscription,
 );
 router.patch(

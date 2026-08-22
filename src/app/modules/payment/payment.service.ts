@@ -135,7 +135,7 @@ const initializePayment = async (payload: PaymentInitPayload) => {
   const cancelUrl = `${config?.server_url}/payment/cancel?subscriptionId=${dbOrderId}&tranId=${transactionRef}&redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
 
   const paymentPayload: PaymentInitRequest = {
-    amount: packageData.price,
+    amount: subscription.payableAmount ?? packageData.price,
     currency: payload.currency || CURRENCY_BY_PROVIDER[provider],
     orderId: transactionRef,
     customerName: userData.name,
@@ -208,7 +208,7 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
 
   // Idempotency guard — duplicate callback (double redirect, retried
   // webhook) shouldn't reprocess an already-active subscription.
-  if (subscription.status === 'active' && subscription.isActive) {
+  if (subscription.status === 'active') {
     throw new AppError(httpStatus.OK, 'Subscription already active');
   }
 
@@ -229,16 +229,14 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
   if (!verification.success) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Payment verification failed');
   }
-  const oldSubscription = await Subscription.findOneAndDelete(
+  await Subscription.updateMany(
     {
       user: subscription.user,
-      isActive: true,
+      _id: { $ne: subscription._id },
+      status: 'active',
       isDeleted: false,
     },
-    {
-      isActive: false,
-      isExpired: true,
-    },
+    { $set: { status: 'expired' } },
   );
   const packageData = subscription.package as IPackage & {
     durationInMonths?: number;
@@ -252,8 +250,10 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
   subscription.startDate = now;
   subscription.endDate = endDate;
   subscription.status = 'active';
-  subscription.isActive = true;
-  subscription.isExpired = false;
+  subscription.tranId = tranId;
+  subscription.paymentProvider = provider as 'aamarpay' | 'cashfree';
+  subscription.currency = CURRENCY_BY_PROVIDER[provider];
+  subscription.paidAt = now;
   subscription.isDeleted = false;
   await subscription.save();
 

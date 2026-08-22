@@ -11,6 +11,8 @@ const ads_route_1 = require("../modules/ads/ads.route");
 const subscription_route_1 = require("../modules/subscription/subscription.route");
 const payment_route_1 = require("../modules/payment/payment.route");
 const package_route_1 = require("../modules/package/package.route");
+const coupon_route_1 = require("../modules/coupon/coupon.route");
+const adminDashboard_route_1 = require("../modules/adminDashboard/adminDashboard.route");
 const router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -48,6 +50,14 @@ const moduleRoutes = [
     {
         path: '/subscription',
         route: subscription_route_1.subscriptionRoutes,
+    },
+    {
+        path: '/coupon',
+        route: coupon_route_1.couponRoutes,
+    },
+    {
+        path: '/admin-dashboard',
+        route: adminDashboard_route_1.adminDashboardRoutes,
     },
     {
         path: '/payment',

@@ -6,6 +6,14 @@ const subscriptionSchema = new Schema<ISubscription>(
     user: { type: Types.ObjectId, ref: 'User', required: true },
     package: { type: Types.ObjectId, ref: 'Package', required: true },
     tranId: { type: String, default: '' },
+    coupon: { type: Types.ObjectId, ref: 'Coupon' },
+    couponCode: { type: String, trim: true, uppercase: true },
+    originalPrice: { type: Number, required: true, min: 0 },
+    discountAmount: { type: Number, default: 0, min: 0 },
+    payableAmount: { type: Number, required: true, min: 0 },
+    paymentProvider: { type: String, enum: ['aamarpay', 'cashfree'] },
+    currency: { type: String, trim: true, uppercase: true },
+    paidAt: { type: Date },
     status: {
       type: String,
       enum: ['pending', 'active', 'expired', 'cancelled', 'failed'],
@@ -13,8 +21,6 @@ const subscriptionSchema = new Schema<ISubscription>(
     },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
-    isActive: { type: Boolean, default: true },
-    isExpired: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
   },
   {

@@ -3,6 +3,9 @@ import { IProducts } from './products.interface';
 import Products from './products.models';
 import QueryBuilder from '../../class/builder/QueryBuilder';
 import AppError from '../../error/AppError';
+import pickQuery from '../../utils/pickQuery';
+import { Types } from 'mongoose';
+import { paginationHelper } from '../../helpers/pagination.helpers';
 
 const createProducts = async (payload: IProducts) => {
   const result = await Products.create(payload);
@@ -83,6 +86,119 @@ const findKeywords = async () => {
   return uniqueKeywords;
 };
 
+const findRelatedProducts = async (query: Record<string, any>) => {
+  const { filters, pagination } = await pickQuery(query);
+  const { productDescription, searchTerm, ...filtersData } = filters;
+  const pipeline: any[] = [];
+
+  if (filtersData?.categoryId) {
+    filtersData['categoryId'] = new Types.ObjectId(filtersData?.categoryId);
+  }
+
+  if (productDescription) {
+    const keywords = productDescription.split(',');
+    pipeline.push({
+      $match: {
+        productDescription: { $in: keywords },
+      },
+    });
+  }
+
+  if (searchTerm) {
+    pipeline.push({
+      $match: {
+        $or: ['productName', 'productDescription'].map(field => ({
+          [field]: {
+            $regex: searchTerm,
+            $options: 'i',
+          },
+        })),
+      },
+    });
+  }
+
+  if (Object.entries(filtersData).length) {
+    // Add custom filters (filtersData) to the aggregation pipeline
+    Object.entries(filtersData).map(([field, value]) => {
+      if (/^\[.*?\]$/.test(value)) {
+        const match = value.match(/\[(.*?)\]/);
+        const queryValue = match ? match[1] : value;
+        pipeline.push({
+          $match: {
+            [field]: { $in: [new Types.ObjectId(queryValue)] },
+          },
+        });
+        delete filtersData[field];
+      }
+    });
+
+    if (Object.entries(filtersData).length) {
+      pipeline.push({
+        $match: {
+          $and: Object.entries(filtersData).map(([field, value]) => ({
+            isDeleted: false,
+            [field]: value,
+          })),
+        },
+      });
+    }
+  }
+
+  // Sorting condition
+  const {
+    page,
+    limit,
+    skip,
+    sortBy: sort,
+  } = paginationHelper.calculatePagination(pagination);
+
+  if (sort) {
+    const sortArray = sort.split(',').map(field => {
+      const trimmedField = field.trim();
+      if (trimmedField.startsWith('-')) {
+        return { [trimmedField.slice(1)]: -1 };
+      }
+      return { [trimmedField]: 1 };
+    });
+
+    pipeline.push({ $sort: Object.assign({}, ...sortArray) });
+  }
+
+  pipeline.push({
+    $facet: {
+      totalData: [{ $count: 'total' }],
+      paginatedData: [
+        { $skip: skip },
+        { $limit: limit },
+        // Lookups
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'categoryId',
+            foreignField: '_id',
+            as: 'category',
+          },
+        },
+        {
+          $addFields: {
+            category: { $arrayElemAt: ['$category', 0] },
+          },
+        },
+      ],
+    },
+  });
+
+  const [result] = await Products.aggregate(pipeline);
+
+  const total = result?.totalData?.[0]?.total || 0;
+  const data = result?.paginatedData || [];
+
+  return {
+    meta: { page, limit, total },
+    data,
+  };
+};
+
 export const productsService = {
   createProducts,
   getAllProducts,
@@ -90,4 +206,5 @@ export const productsService = {
   updateProducts,
   deleteProducts,
   findKeywords,
+  findRelatedProducts,
 };

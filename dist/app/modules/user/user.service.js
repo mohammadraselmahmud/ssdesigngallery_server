@@ -25,6 +25,7 @@ const config_1 = __importDefault(require("../../config"));
 const user_utils_1 = require("./user.utils");
 const path_1 = __importDefault(require("path"));
 const mailSender_1 = require("../../utils/mailSender");
+const subscription_service_1 = require("../subscription/subscription.service");
 const login = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const user = yield user_models_1.User.isUserExist(payload === null || payload === void 0 ? void 0 : payload.email);
@@ -190,12 +191,23 @@ const updateUser = (id, payload) => __awaiter(void 0, void 0, void 0, function* 
     }
     return user;
 });
-const geUserById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield user_models_1.User.findById(id);
-    if (!result) {
+// const geUserById = async (id: string) => {
+//   const result = await User.findById(id);
+//   const subscription = await subscriptionService?.getCurrentPlan(id);
+//   if (!result) {
+//     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+//   }
+//   return { ...result?.toObject(), subscription: subscription };
+// };
+const getUserById = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const [user, subscription] = yield Promise.all([
+        user_models_1.User.findById(id).lean(),
+        subscription_service_1.subscriptionService.getCurrentPlan(id),
+    ]);
+    if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
     }
-    return result;
+    return Object.assign(Object.assign({}, user), { subscription: subscription !== null && subscription !== void 0 ? subscription : {} });
 });
 //
 const getAllUser = (query) => __awaiter(void 0, void 0, void 0, function* () {
@@ -229,8 +241,9 @@ exports.userService = {
     verifyOtp,
     updatePassword,
     updateUser,
-    geUserById,
+    getUserById,
     changePassword,
-    getAllUser, signInWithGoogle
+    getAllUser,
+    signInWithGoogle,
     // deleteUser,
 };

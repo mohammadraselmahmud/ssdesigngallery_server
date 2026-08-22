@@ -24,6 +24,11 @@ const userSchema: Schema<IUser> = new Schema(
       required: false,
       default: null,
     },
+    profile: {
+      type: String,
+      default: null,
+    },
+
 
     password: {
       type: String,

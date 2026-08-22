@@ -61,6 +61,15 @@ const getByKeyWords = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         data: result,
     });
 }));
+const getRelatedProducts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield products_service_1.productsService.findRelatedProducts(req.query);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: 'Related products fetched successfully',
+        data: result,
+    });
+}));
 const getMyProducts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     req.query.user = req.user.userId;
     const result = yield products_service_1.productsService.getAllProducts(req.query);
@@ -112,5 +121,6 @@ exports.productsController = {
     deleteProducts,
     getMyProducts,
     getByKeyWords,
+    getRelatedProducts,
     getCategoryWiseProduct,
 };

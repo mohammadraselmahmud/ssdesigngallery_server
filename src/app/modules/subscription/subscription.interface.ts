@@ -15,9 +15,15 @@ export interface ISubscription {
   startDate: Date;
   endDate: Date;
   tranId: string;
+  coupon?: ObjectId;
+  couponCode?: string;
+  originalPrice: number;
+  discountAmount: number;
+  payableAmount: number;
+  paymentProvider?: 'aamarpay' | 'cashfree';
+  currency?: string;
+  paidAt?: Date;
   status: SubscriptionStatus;
-  isActive: Boolean;
-  isExpired: Boolean;
   isDeleted: Boolean;
 }
 

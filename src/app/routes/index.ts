@@ -9,6 +9,8 @@ import { adsRoutes } from '../modules/ads/ads.route';
 import { subscriptionRoutes } from '../modules/subscription/subscription.route';
 import { paymentRoutes } from '../modules/payment/payment.route';
 import { packageRoutes } from '../modules/package/package.route';
+import { couponRoutes } from '../modules/coupon/coupon.route';
+import { adminDashboardRoutes } from '../modules/adminDashboard/adminDashboard.route';
 
 const router = Router();
 const moduleRoutes = [
@@ -47,6 +49,14 @@ const moduleRoutes = [
   {
     path: '/subscription',
     route: subscriptionRoutes,
+  },
+  {
+    path: '/coupon',
+    route: couponRoutes,
+  },
+  {
+    path: '/admin-dashboard',
+    route: adminDashboardRoutes,
   },
 
   {

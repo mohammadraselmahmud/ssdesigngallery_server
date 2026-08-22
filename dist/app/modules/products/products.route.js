@@ -40,6 +40,7 @@ router.post('/', (0, auth_1.default)(user_constants_1.USER_ROLE.admin), upload.s
 router.patch('/:id', (0, auth_1.default)(user_constants_1.USER_ROLE.admin), upload.single('image'), (0, parseData_1.default)(), products_controller_1.productsController.updateProducts);
 router.delete('/:id', (0, auth_1.default)(user_constants_1.USER_ROLE.admin), products_controller_1.productsController.deleteProducts);
 router.get('/keywords', products_controller_1.productsController === null || products_controller_1.productsController === void 0 ? void 0 : products_controller_1.productsController.getByKeyWords);
+router.get('/related', products_controller_1.productsController.getRelatedProducts);
 router.get('/search', products_controller_1.productsController.getAllProducts);
 router.get('/category-wise/:id', products_controller_1.productsController.getCategoryWiseProduct);
 router.get('/:id', products_controller_1.productsController.getProductsById);
