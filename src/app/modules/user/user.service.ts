@@ -63,11 +63,21 @@ const login = async (payload: TLogin) => {
 
 const createUser = async (payload: IUser): Promise<IUser> => {
   const isExist = await User.isUserExist(payload.email as string);
+
   if (isExist) {
-    throw new AppError(
-      httpStatus.BAD_GATEWAY,
-      'User already exists! Please login',
-    );
+    if (isExist?.emailVerified) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        'This user already exist, Please try to login',
+      );
+    }
+    const user = await User.findByIdAndUpdate(isExist?._id, payload, {
+      new: true,
+    });
+    if (!user)
+      throw new AppError(httpStatus.BAD_GATEWAY, 'User creating failed!');
+
+    return user;
   }
 
   const user = await User.create(payload);
@@ -88,12 +98,11 @@ const signInWithGoogle = async (payload: any) => {
       registerWithGoogle: true,
     };
 
-
     const user: IUser | null = await User.create(userData);
     if (!user) {
       throw new AppError(httpStatus.FORBIDDEN, 'user register failed!');
     }
-    
+
     const jwtPayload: { userId: string; role: string } = {
       userId: user?._id?.toString() as string,
       role: user?.role,
