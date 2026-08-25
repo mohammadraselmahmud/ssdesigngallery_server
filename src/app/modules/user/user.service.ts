@@ -26,12 +26,12 @@ const login = async (payload: TLogin) => {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
 
-  if (user?.registerWithGoogle) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      'this user registered with Google not manually',
-    );
-  }
+  // if (user?.registerWithGoogle) {
+  //   throw new AppError(
+  //     httpStatus.FORBIDDEN,
+  //     'this user registered with Google not manually',
+  //   );
+  // }
 
   if (!(await User.isPasswordMatched(payload.password, user.password))) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Password does not match');
@@ -87,10 +87,13 @@ const signInWithGoogle = async (payload: any) => {
       emailVerified: true,
       registerWithGoogle: true,
     };
+
+
     const user: IUser | null = await User.create(userData);
     if (!user) {
       throw new AppError(httpStatus.FORBIDDEN, 'user register failed!');
     }
+    
     const jwtPayload: { userId: string; role: string } = {
       userId: user?._id?.toString() as string,
       role: user?.role,

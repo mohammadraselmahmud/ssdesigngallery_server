@@ -9,23 +9,43 @@ const router = Router();
 
 router.post(
   '/',
-  auth(USER_ROLE.user),
+  auth(
+    USER_ROLE.user,
+    USER_ROLE.admin,
+    USER_ROLE.sub_admin,
+    USER_ROLE.super_admin,
+  ),
   validateRequest(subscriptionValidation.createSubscriptionSchema),
   subscriptionController.createSubscription,
 );
 router.patch(
   '/:id',
-  auth(USER_ROLE.user),
+  auth(
+    USER_ROLE.user,
+    USER_ROLE.admin,
+    USER_ROLE.sub_admin,
+    USER_ROLE.super_admin,
+  ),
   subscriptionController.updateSubscription,
 );
 router.delete(
   '/:id',
-  auth(USER_ROLE.user),
+  auth(
+    USER_ROLE.user,
+    USER_ROLE.admin,
+    USER_ROLE.sub_admin,
+    USER_ROLE.super_admin,
+  ),
   subscriptionController.deleteSubscription,
 );
 router.get(
   '/current-plan',
-  auth(USER_ROLE.user),
+  auth(
+    USER_ROLE.user,
+    USER_ROLE.admin,
+    USER_ROLE.sub_admin,
+    USER_ROLE.super_admin,
+  ),
   subscriptionController.getCurrentPlan,
 );
 router.get(
