@@ -20,7 +20,10 @@ export interface ISubscription {
   originalPrice: number;
   discountAmount: number;
   payableAmount: number;
-  paymentProvider?: 'aamarpay' | 'cashfree';
+  totalCredit?: number;
+  usedCredit?: number;
+  remainingCredit?: number;
+  paymentProvider?: 'bkash' | 'google_pay' | 'google_play' | 'stripe' | string;
   currency?: string;
   paidAt?: Date;
   status: SubscriptionStatus;

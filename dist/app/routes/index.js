@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const user_route_1 = require("../modules/user/user.route");
@@ -13,8 +16,18 @@ const payment_route_1 = require("../modules/payment/payment.route");
 const package_route_1 = require("../modules/package/package.route");
 const coupon_route_1 = require("../modules/coupon/coupon.route");
 const adminDashboard_route_1 = require("../modules/adminDashboard/adminDashboard.route");
+const ai_routes_1 = require("../modules/ai/ai.routes");
+const route_1 = __importDefault(require("../modules/uploads/route"));
 const router = (0, express_1.Router)();
 const moduleRoutes = [
+    {
+        path: '/upload',
+        route: route_1.default,
+    },
+    {
+        path: '/ai',
+        route: ai_routes_1.aiRoutes,
+    },
     {
         path: '/users',
         route: user_route_1.userRoutes,

@@ -13,7 +13,7 @@ export interface PaymentInitRequest {
 }
 
 export interface PaymentInitResponse {
-  provider: 'aamarpay' | 'cashfree' | 'stripe';
+  provider: 'bkash' | 'stripe' | 'google_pay' | 'google_play';
   gatewayUrl?: string;
   paymentId?: string;
   orderId?: string;
@@ -22,7 +22,7 @@ export interface PaymentInitResponse {
 }
 
 export interface PaymentVerifyPayload {
-  provider: 'aamarpay' | 'cashfree' | 'stripe';
+  provider: 'bkash' | 'stripe' | 'google_pay' | 'google_play';
   paymentId?: string;
   orderId?: string;
   requestBody?: Record<string, unknown>;
@@ -30,7 +30,7 @@ export interface PaymentVerifyPayload {
 
 export interface PaymentVerificationResult {
   success: boolean;
-  provider: 'aamarpay' | 'cashfree' | 'stripe';
+  provider: 'bkash' | 'stripe' | 'google_pay' | 'google_play';
   paymentId?: string;
   orderId?: string;
   status?: string;

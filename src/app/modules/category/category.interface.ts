@@ -4,6 +4,7 @@ export interface ICategory {
   _id: string;
   name: string;
   categoryImage: string;
+  prompt: string;
   isDeleted: boolean;
 }
 

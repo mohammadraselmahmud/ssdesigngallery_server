@@ -11,7 +11,13 @@ const subscriptionSchema = new Schema<ISubscription>(
     originalPrice: { type: Number, required: true, min: 0 },
     discountAmount: { type: Number, default: 0, min: 0 },
     payableAmount: { type: Number, required: true, min: 0 },
-    paymentProvider: { type: String, enum: ['aamarpay', 'cashfree'] },
+    totalCredit: { type: Number, default: 0, min: 0 },
+    usedCredit: { type: Number, default: 0, min: 0 },
+    remainingCredit: { type: Number, default: 0, min: 0 },
+    paymentProvider: {
+      type: String,
+      enum: ['bkash', 'google_pay', 'google_play', 'stripe'],
+    },
     currency: { type: String, trim: true, uppercase: true },
     paidAt: { type: Date },
     status: {

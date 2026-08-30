@@ -53,9 +53,27 @@ const handlePaymentCancel = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const handleGooglePayWebhook = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.userId || req.user?._id || req.body?.userId;
+    const result = await paymentService.verifyAndSubscribeGooglePay(
+      req.body,
+      userId,
+    );
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message:
+        result.message || 'Subscription activated successfully via Google Pay',
+      data: result,
+    });
+  },
+);
+
 export const paymentController = {
   initPayment,
   verifyPayment,
   handlePaymentSuccess,
   handlePaymentCancel,
+  handleGooglePayWebhook,
 };

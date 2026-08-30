@@ -32,9 +32,12 @@ const login = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
     }
-    if (user === null || user === void 0 ? void 0 : user.registerWithGoogle) {
-        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'this user registered with Google not manually');
-    }
+    // if (user?.registerWithGoogle) {
+    //   throw new AppError(
+    //     httpStatus.FORBIDDEN,
+    //     'this user registered with Google not manually',
+    //   );
+    // }
     if (!(yield user_models_1.User.isPasswordMatched(payload.password, user.password))) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'Password does not match');
     }
@@ -53,7 +56,15 @@ const login = (payload) => __awaiter(void 0, void 0, void 0, function* () {
 const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const isExist = yield user_models_1.User.isUserExist(payload.email);
     if (isExist) {
-        throw new AppError_1.default(http_status_1.default.BAD_GATEWAY, 'User already exists! Please login');
+        if (isExist === null || isExist === void 0 ? void 0 : isExist.emailVerified) {
+            throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'This user already exist, Please try to login');
+        }
+        const user = yield user_models_1.User.findByIdAndUpdate(isExist === null || isExist === void 0 ? void 0 : isExist._id, payload, {
+            new: true,
+        });
+        if (!user)
+            throw new AppError_1.default(http_status_1.default.BAD_GATEWAY, 'User creating failed!');
+        return user;
     }
     const user = yield user_models_1.User.create(payload);
     if (!user) {
