@@ -13,10 +13,11 @@ const mongoose_1 = require("mongoose");
 const categorySchema = new mongoose_1.Schema({
     name: { type: 'string', required: true, unique: true },
     categoryImage: { type: 'string', required: false },
+    prompt: { type: 'string', required: false },
     isDeleted: {
         type: Boolean,
-        default: false
-    }
+        default: false,
+    },
 }, {
     timestamps: true,
 });

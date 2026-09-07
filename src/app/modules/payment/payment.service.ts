@@ -1,4 +1,4 @@
-import bkashService from '../../class/payment/bkash';
+import shurjoPayService from '../../class/payment/shurjopay';
 import Subscription from '../subscription/subscription.models';
 import {
   PaymentInitRequest,
@@ -16,80 +16,14 @@ import AppError from '../../error/AppError';
 import httpStatus from 'http-status';
 
 type PaymentInitPayload = PaymentInitRequest & {
-  provider: 'bkash';
+  provider: 'shurjopay';
   subscriptionId?: string;
   redirectUrl?: string;
 };
 
 const CURRENCY_BY_PROVIDER: Record<string, string> = {
-  bkash: 'BDT',
+  shurjopay: 'BDT',
 };
-
-// const initializePayment = async (payload: PaymentInitPayload) => {
-//   const { provider, subscriptionId, redirectUrl } = payload;
-
-//   if (!subscriptionId) {
-//     throw new Error('subscriptionId is required');
-//   }
-
-//   const subscription = await Subscription.findById(subscriptionId).populate([
-//     { path: 'package' },
-//     { path: 'user' },
-//   ]);
-
-//   if (!subscription) {
-//     throw new Error('Subscription not found');
-//   }
-
-//   const packageData = subscription.package as IPackage & { _id?: string };
-//   const userData = subscription.user as IUser & { _id?: string };
-//   const orderId = subscription._id?.toString() || '';
-
-//   if (!orderId) {
-//     throw new Error('Unable to resolve orderId for subscription');
-//   }
-
-//   const frontendRedirectUrl =
-//     redirectUrl ||
-//     payload.successUrl ||
-//     process.env.CLIENT_URL ||
-//     'http://localhost:3000/payment/success';
-
-//   const serverBaseUrl = process.env.SERVER_URL || 'http://localhost:5000';
-//   const callbackBaseUrl = `${serverBaseUrl}/api/payment`;
-
-//   // userId/packageId are intentionally NOT put in the URL anymore —
-//   // handlePaymentSuccess looks the subscription up by orderId instead,
-//   // so a tampered query string can no longer redirect activation to a
-//   // different user/package.
-//   const successUrl = `${callbackBaseUrl}/success?orderId=${orderId}&provider=${provider}&redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
-//   const cancelUrl = `${callbackBaseUrl}/cancel?orderId=${orderId}&redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
-
-//   const paymentPayload: PaymentInitRequest = {
-//     amount: packageData.price,
-//     currency: payload.currency || CURRENCY_BY_PROVIDER[provider],
-//     orderId,
-//     customerName: userData.name,
-//     customerEmail: userData.email,
-//     customerPhone: userData?.phoneNumber || '01700000000',
-//     successUrl,
-//     cancelUrl,
-//     metadata: {
-//       ...(payload.metadata || {}),
-//       subscriptionId: subscription._id?.toString(),
-//       userId: userData._id || '',
-//       packageId: packageData._id || '',
-//       description: 'Subscription payment',
-//       redirectUrl: frontendRedirectUrl,
-//     },
-//   };
-
-//   }
-
-//   }
-
-//   throw new Error('Unsupported payment provider');
-// };
 
 const initializePayment = async (payload: PaymentInitPayload) => {
   const { provider, subscriptionId, redirectUrl } = payload;
@@ -117,10 +51,10 @@ const initializePayment = async (payload: PaymentInitPayload) => {
 
   // Unique per attempt — gateway tran_id/order_id must never repeat,
   // even for the same subscription (retries, abandoned payments, etc).
-  const transactionRef = `BK-${dbOrderId.slice(-12)}-${Date.now().toString(36)}`;
+  const transactionRef = `${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`;
 
   subscription.tranId = transactionRef;
-  subscription.paymentProvider = 'bkash';
+  subscription.paymentProvider = 'shurjopay';
   subscription.currency = 'BDT';
   subscription.status = 'pending';
   await subscription.save();
@@ -131,13 +65,8 @@ const initializePayment = async (payload: PaymentInitPayload) => {
     process.env.CLIENT_URL ||
     'http://localhost:3000/payment/success';
 
-  //   const serverBaseUrl = process.env.SERVER_URL || 'http://localhost:5000/api';
-  //   const callbackBaseUrl = `${serverBaseUrl}/payment`;
-
-  // subscriptionId -> used to look up the Subscription doc
-  // orderId        -> the unique gateway transaction ref, used to verify
-  const successUrl = `${config?.server_url}/payment/success?subscriptionId=${dbOrderId}&tranId=${transactionRef}&provider=${provider}&redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
-  const cancelUrl = `${config?.server_url}/payment/cancel?subscriptionId=${dbOrderId}&tranId=${transactionRef}&redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
+  const successUrl = `${config?.server_url}/payment/success?subscriptionId=${dbOrderId}&tranId=${transactionRef}&provider=${provider}`;
+  const cancelUrl = `${config?.server_url}/payment/cancel?subscriptionId=${dbOrderId}&tranId=${transactionRef}`;
 
   const paymentPayload: PaymentInitRequest = {
     amount: subscription.payableAmount ?? packageData.price,
@@ -148,6 +77,7 @@ const initializePayment = async (payload: PaymentInitPayload) => {
     customerPhone: userData?.phoneNumber || '01700000000',
     successUrl,
     cancelUrl,
+    subscriptionId: dbOrderId,
     metadata: {
       ...(payload.metadata || {}),
       subscriptionId: dbOrderId,
@@ -158,16 +88,16 @@ const initializePayment = async (payload: PaymentInitPayload) => {
     },
   };
 
-  if (provider === 'bkash') {
-    return bkashService.initializePayment(paymentPayload);
+  if (provider === 'shurjopay') {
+    return shurjoPayService.initializePayment(paymentPayload);
   }
 
   throw new Error('Unsupported payment provider');
 };
 
 const verifyPayment = async (payload: PaymentVerifyPayload) => {
-  if (payload.provider === 'bkash' && payload.paymentId) {
-    return bkashService.executePayment(payload.paymentId);
+  if (payload.provider === 'shurjopay' && payload.paymentId) {
+    return shurjoPayService.verifyPayment(payload.paymentId);
   }
 
   throw new Error('Unsupported payment provider');
@@ -183,10 +113,25 @@ const getSubscriptionDurationInMonths = (
 };
 
 const handlePaymentSuccess = async (query: Record<string, any>) => {
-  const { subscriptionId, tranId, provider, paymentID, status } = query;
+  const {
+    subscriptionId,
+    tranId,
+    provider,
+    order_id: shurjoPayOrderId,
+  } = query;
+
+  const rawProvider = typeof provider === 'string' ? provider : '';
+  const [normalizedProvider, appendedQuery] = rawProvider.split('?');
+  const appendedParams = new URLSearchParams(appendedQuery);
+  const queryOrderId =
+    typeof shurjoPayOrderId === 'string' &&
+    shurjoPayOrderId !== '{order_id}'
+      ? shurjoPayOrderId
+      : undefined;
+  const gatewayOrderId = queryOrderId || appendedParams.get('order_id');
   const orderId = typeof query.orderId === 'string' ? query.orderId : tranId;
 
-  if (!subscriptionId || !tranId || !provider) {
+  if (!subscriptionId || !tranId || !normalizedProvider || !gatewayOrderId) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       'Missing required query parameters for payment success',
@@ -203,28 +148,10 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
     );
   }
 
-  if (provider !== 'bkash' || subscription.tranId !== tranId) {
+  if (normalizedProvider !== 'shurjopay' || subscription.tranId !== tranId) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       'Payment invoice does not match',
-    );
-  }
-
-  if (typeof paymentID !== 'string' || !paymentID) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Missing bKash paymentID');
-  }
-
-  if (
-    typeof status === 'string' &&
-    !['success', 'successful'].includes(status.toLowerCase())
-  ) {
-    subscription.status = status.toLowerCase().includes('cancel')
-      ? 'cancelled'
-      : 'failed';
-    await subscription.save();
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'bKash payment was not successful',
     );
   }
 
@@ -237,9 +164,9 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
   let verification;
   try {
     verification = await verifyPayment({
-      provider: provider as 'bkash',
+      provider: normalizedProvider as 'shurjopay',
       orderId: tranId,
-      paymentId: typeof paymentID === 'string' ? paymentID : undefined,
+      paymentId: gatewayOrderId,
       requestBody: query,
     });
   } catch (error) {
@@ -252,16 +179,16 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
   if (!verification.success) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Payment verification failed');
   }
-  const bKashResponse = verification.rawResponse as Record<string, unknown>;
+  const shurjoPayResponse = verification.rawResponse as Record<string, unknown>;
   if (
     verification.orderId !== tranId ||
-    bKashResponse.currency !== 'BDT' ||
-    Number(bKashResponse.amount).toFixed(2) !==
+    shurjoPayResponse.currency !== 'BDT' ||
+    Number(shurjoPayResponse.amount).toFixed(2) !==
       Number(subscription.payableAmount).toFixed(2)
   )
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'bKash payment details do not match this subscription',
+      'ShurjoPay payment details do not match this subscription',
     );
   await Subscription.updateMany(
     {
@@ -293,16 +220,16 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
   subscription.usedCredit = 0;
   subscription.remainingCredit = totalCredit;
   subscription.status = 'active';
-  subscription.tranId = tranId;
-  subscription.paymentProvider = provider as 'bkash';
-  subscription.currency = CURRENCY_BY_PROVIDER[provider];
+  subscription.tranId = verification.paymentId || gatewayOrderId;
+  subscription.paymentProvider = normalizedProvider as 'shurjopay';
+  subscription.currency = CURRENCY_BY_PROVIDER[normalizedProvider];
   subscription.paidAt = now;
   subscription.isDeleted = false;
   await subscription.save();
 
   return {
     success: true,
-    orderId,
+    orderId: gatewayOrderId,
     message: 'Subscription activated successfully',
   };
 };

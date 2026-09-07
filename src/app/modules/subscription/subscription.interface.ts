@@ -23,7 +23,12 @@ export interface ISubscription {
   totalCredit?: number;
   usedCredit?: number;
   remainingCredit?: number;
-  paymentProvider?: 'bkash' | 'google_pay' | 'google_play' | 'stripe' | string;
+  paymentProvider?:
+    | 'shurjopay'
+    | 'google_pay'
+    | 'google_play'
+    | 'stripe'
+    | string;
   currency?: string;
   paidAt?: Date;
   status: SubscriptionStatus;

@@ -7,3 +7,6 @@ dist/
 nn.ts
 .vercel
 dist/*
+
+.env.example
+pnpm*

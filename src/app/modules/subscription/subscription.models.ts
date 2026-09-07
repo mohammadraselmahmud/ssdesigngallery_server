@@ -16,7 +16,7 @@ const subscriptionSchema = new Schema<ISubscription>(
     remainingCredit: { type: Number, default: 0, min: 0 },
     paymentProvider: {
       type: String,
-      enum: ['bkash', 'google_pay', 'google_play', 'stripe'],
+      enum: ['shurjopay', 'google_pay', 'google_play', 'stripe'],
     },
     currency: { type: String, trim: true, uppercase: true },
     paidAt: { type: Date },

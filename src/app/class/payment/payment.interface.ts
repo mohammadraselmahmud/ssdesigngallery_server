@@ -6,6 +6,7 @@ export interface PaymentInitRequest {
   customerEmail?: string;
   customerPhone?: string;
   successUrl?: string;
+  failUrl?: string;
   cancelUrl?: string;
   redirectUrl?: string;
   subscriptionId?: string;
@@ -13,7 +14,7 @@ export interface PaymentInitRequest {
 }
 
 export interface PaymentInitResponse {
-  provider: 'bkash' | 'stripe' | 'google_pay' | 'google_play';
+  provider: 'shurjopay' | 'stripe' | 'google_pay' | 'google_play';
   gatewayUrl?: string;
   paymentId?: string;
   orderId?: string;
@@ -22,7 +23,7 @@ export interface PaymentInitResponse {
 }
 
 export interface PaymentVerifyPayload {
-  provider: 'bkash' | 'stripe' | 'google_pay' | 'google_play';
+  provider: 'shurjopay' | 'stripe' | 'google_pay' | 'google_play';
   paymentId?: string;
   orderId?: string;
   requestBody?: Record<string, unknown>;
@@ -30,7 +31,7 @@ export interface PaymentVerifyPayload {
 
 export interface PaymentVerificationResult {
   success: boolean;
-  provider: 'bkash' | 'stripe' | 'google_pay' | 'google_play';
+  provider: 'shurjopay' | 'stripe' | 'google_pay' | 'google_play';
   paymentId?: string;
   orderId?: string;
   status?: string;

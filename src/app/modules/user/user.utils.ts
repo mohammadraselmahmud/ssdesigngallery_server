@@ -5,6 +5,7 @@ export const createToken = (
   secret: string,
   expiresIn: string,
 ) => {
+  //@ts-ignore
   return jwt.sign(jwtPayload, secret, {
     expiresIn,
   });
