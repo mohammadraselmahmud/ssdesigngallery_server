@@ -181,7 +181,10 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
   }
 
   if (!verification.success) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Payment verification failed');
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `Payment verification failed: ${verification.status || 'unknown status'}`,
+    );
   }
   const payStationResponse = verification.rawResponse as Record<
     string,
@@ -189,8 +192,9 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
   >;
   if (
     verification.orderId !== tranId ||
-    Number(payStationResponse.payment_amount).toFixed(2) !==
-      Number(subscription.payableAmount).toFixed(2)
+    Number(
+      payStationResponse.payment_amount ?? payStationResponse.trx_amount,
+    ).toFixed(2) !== Number(subscription.payableAmount).toFixed(2)
   )
     throw new AppError(
       httpStatus.BAD_REQUEST,

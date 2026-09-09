@@ -95,13 +95,14 @@ class PayStationService {
     invoiceNumber: string,
   ): Promise<PaymentVerificationResult> {
     const config = this.requireConfig();
+    const form = new URLSearchParams({ invoice_number: invoiceNumber });
     const response = await axios.post(
       `${config.baseUrl}/transaction-status`,
-      { invoice_number: invoiceNumber },
+      form,
       {
         headers: {
           Accept: 'application/json',
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
           merchantId: config.merchantId,
         },
         timeout: 20000,
@@ -110,10 +111,15 @@ class PayStationService {
 
     const responseData = response.data as Record<string, unknown>;
     const data = (responseData.data || {}) as Record<string, unknown>;
-    const status = String(data.trx_status || '').toLowerCase();
+    const status = String(data.trx_status || responseData.status || '')
+      .trim()
+      .toLowerCase();
+    const statusCode = String(responseData.status_code || '').trim();
 
     return {
-      success: responseData.status_code === '200' && status === 'success',
+      success:
+        statusCode === '200' &&
+        ['success', 'successful', 'paid'].includes(status),
       provider: 'paystation',
       paymentId: String(data.trx_id || invoiceNumber),
       orderId: String(data.invoice_number || invoiceNumber),
