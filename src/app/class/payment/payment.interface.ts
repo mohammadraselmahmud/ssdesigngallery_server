@@ -14,7 +14,7 @@ export interface PaymentInitRequest {
 }
 
 export interface PaymentInitResponse {
-  provider: 'shurjopay' | 'stripe' | 'google_pay' | 'google_play';
+  provider: 'paystation' | 'stripe' | 'google_pay' | 'google_play';
   gatewayUrl?: string;
   paymentId?: string;
   orderId?: string;
@@ -23,7 +23,7 @@ export interface PaymentInitResponse {
 }
 
 export interface PaymentVerifyPayload {
-  provider: 'shurjopay' | 'stripe' | 'google_pay' | 'google_play';
+  provider: 'paystation' | 'stripe' | 'google_pay' | 'google_play';
   paymentId?: string;
   orderId?: string;
   requestBody?: Record<string, unknown>;
@@ -31,7 +31,7 @@ export interface PaymentVerifyPayload {
 
 export interface PaymentVerificationResult {
   success: boolean;
-  provider: 'shurjopay' | 'stripe' | 'google_pay' | 'google_play';
+  provider: 'paystation' | 'stripe' | 'google_pay' | 'google_play';
   paymentId?: string;
   orderId?: string;
   status?: string;

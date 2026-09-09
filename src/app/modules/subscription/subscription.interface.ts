@@ -3,11 +3,7 @@ import { IUser } from '../user/user.interface';
 import { IPackage } from '../package/package.interface';
 
 export type SubscriptionStatus =
-  | 'pending'
-  | 'active'
-  | 'expired'
-  | 'cancelled'
-  | 'failed';
+  'pending' | 'active' | 'expired' | 'cancelled' | 'failed';
 
 export interface ISubscription {
   user: ObjectId | IUser;
@@ -24,11 +20,7 @@ export interface ISubscription {
   usedCredit?: number;
   remainingCredit?: number;
   paymentProvider?:
-    | 'shurjopay'
-    | 'google_pay'
-    | 'google_play'
-    | 'stripe'
-    | string;
+    'paystation' | 'google_pay' | 'google_play' | 'stripe' | string;
   currency?: string;
   paidAt?: Date;
   status: SubscriptionStatus;

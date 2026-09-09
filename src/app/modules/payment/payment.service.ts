@@ -1,4 +1,4 @@
-import shurjoPayService from '../../class/payment/shurjopay';
+import payStationService from '../../class/payment/paystation';
 import Subscription from '../subscription/subscription.models';
 import {
   PaymentInitRequest,
@@ -16,13 +16,13 @@ import AppError from '../../error/AppError';
 import httpStatus from 'http-status';
 
 type PaymentInitPayload = PaymentInitRequest & {
-  provider: 'shurjopay';
+  provider: 'paystation';
   subscriptionId?: string;
   redirectUrl?: string;
 };
 
 const CURRENCY_BY_PROVIDER: Record<string, string> = {
-  shurjopay: 'BDT',
+  paystation: 'BDT',
 };
 
 const initializePayment = async (payload: PaymentInitPayload) => {
@@ -54,7 +54,7 @@ const initializePayment = async (payload: PaymentInitPayload) => {
   const transactionRef = `${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`;
 
   subscription.tranId = transactionRef;
-  subscription.paymentProvider = 'shurjopay';
+  subscription.paymentProvider = 'paystation';
   subscription.currency = 'BDT';
   subscription.status = 'pending';
   await subscription.save();
@@ -88,16 +88,16 @@ const initializePayment = async (payload: PaymentInitPayload) => {
     },
   };
 
-  if (provider === 'shurjopay') {
-    return shurjoPayService.initializePayment(paymentPayload);
+  if (provider === 'paystation') {
+    return payStationService.initializePayment(paymentPayload);
   }
 
   throw new Error('Unsupported payment provider');
 };
 
 const verifyPayment = async (payload: PaymentVerifyPayload) => {
-  if (payload.provider === 'shurjopay' && payload.paymentId) {
-    return shurjoPayService.verifyPayment(payload.paymentId);
+  if (payload.provider === 'paystation' && payload.paymentId) {
+    return payStationService.verifyPayment(payload.paymentId);
   }
 
   throw new Error('Unsupported payment provider');
@@ -117,19 +117,23 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
     subscriptionId,
     tranId,
     provider,
-    order_id: shurjoPayOrderId,
+    invoice_number: payStationInvoiceNumber,
+    invoice,
+    order_id: callbackOrderId,
   } = query;
 
   const rawProvider = typeof provider === 'string' ? provider : '';
   const [normalizedProvider, appendedQuery] = rawProvider.split('?');
   const appendedParams = new URLSearchParams(appendedQuery);
-  const queryOrderId =
-    typeof shurjoPayOrderId === 'string' &&
-    shurjoPayOrderId !== '{order_id}'
-      ? shurjoPayOrderId
-      : undefined;
-  const gatewayOrderId = queryOrderId || appendedParams.get('order_id');
-  const orderId = typeof query.orderId === 'string' ? query.orderId : tranId;
+  const gatewayOrderId =
+    (typeof payStationInvoiceNumber === 'string' &&
+    payStationInvoiceNumber !== '{invoice_number}'
+      ? payStationInvoiceNumber
+      : undefined) ||
+    (typeof invoice === 'string' ? invoice : undefined) ||
+    (typeof callbackOrderId === 'string' ? callbackOrderId : undefined) ||
+    appendedParams.get('invoice_number') ||
+    appendedParams.get('order_id');
 
   if (!subscriptionId || !tranId || !normalizedProvider || !gatewayOrderId) {
     throw new AppError(
@@ -148,7 +152,7 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
     );
   }
 
-  if (normalizedProvider !== 'shurjopay' || subscription.tranId !== tranId) {
+  if (normalizedProvider !== 'paystation' || subscription.tranId !== tranId) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       'Payment invoice does not match',
@@ -164,7 +168,7 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
   let verification;
   try {
     verification = await verifyPayment({
-      provider: normalizedProvider as 'shurjopay',
+      provider: normalizedProvider as 'paystation',
       orderId: tranId,
       paymentId: gatewayOrderId,
       requestBody: query,
@@ -179,16 +183,18 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
   if (!verification.success) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Payment verification failed');
   }
-  const shurjoPayResponse = verification.rawResponse as Record<string, unknown>;
+  const payStationResponse = verification.rawResponse as Record<
+    string,
+    unknown
+  >;
   if (
     verification.orderId !== tranId ||
-    shurjoPayResponse.currency !== 'BDT' ||
-    Number(shurjoPayResponse.amount).toFixed(2) !==
+    Number(payStationResponse.payment_amount).toFixed(2) !==
       Number(subscription.payableAmount).toFixed(2)
   )
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'ShurjoPay payment details do not match this subscription',
+      'PayStation payment details do not match this subscription',
     );
   await Subscription.updateMany(
     {
@@ -221,7 +227,7 @@ const handlePaymentSuccess = async (query: Record<string, any>) => {
   subscription.remainingCredit = totalCredit;
   subscription.status = 'active';
   subscription.tranId = verification.paymentId || gatewayOrderId;
-  subscription.paymentProvider = normalizedProvider as 'shurjopay';
+  subscription.paymentProvider = normalizedProvider as 'paystation';
   subscription.currency = CURRENCY_BY_PROVIDER[normalizedProvider];
   subscription.paidAt = now;
   subscription.isDeleted = false;
