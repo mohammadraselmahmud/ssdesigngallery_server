@@ -96,10 +96,24 @@ const findRelatedProducts = async (query: Record<string, any>) => {
   }
 
   if (productDescription) {
-    const keywords = productDescription.split(',');
+    const keywords = productDescription
+      .split(',')
+      .map((keyword: string) => keyword.trim())
+      .filter(Boolean);
+
     pipeline.push({
       $match: {
         productDescription: { $in: keywords },
+      },
+    });
+
+    pipeline.push({
+      $addFields: {
+        matchCount: {
+          $size: {
+            $setIntersection: ['$productDescription', keywords],
+          },
+        },
       },
     });
   }
@@ -161,7 +175,13 @@ const findRelatedProducts = async (query: Record<string, any>) => {
       return { [trimmedField]: 1 };
     });
 
-    pipeline.push({ $sort: Object.assign({}, ...sortArray) });
+    pipeline.push({
+      $sort: productDescription
+        ? Object.assign({ matchCount: -1, _id: 1 }, ...sortArray)
+        : Object.assign({}, ...sortArray),
+    });
+  } else if (productDescription) {
+    pipeline.push({ $sort: { matchCount: -1, _id: 1 } });
   }
 
   pipeline.push({
