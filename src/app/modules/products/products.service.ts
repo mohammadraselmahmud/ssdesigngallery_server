@@ -114,6 +114,7 @@ const findRelatedProducts = async (query: Record<string, any>) => {
             $setIntersection: ['$productDescription', keywords],
           },
         },
+        randomScore: { $rand: {} },
       },
     });
   }
@@ -177,11 +178,11 @@ const findRelatedProducts = async (query: Record<string, any>) => {
 
     pipeline.push({
       $sort: productDescription
-        ? Object.assign({ matchCount: -1, _id: 1 }, ...sortArray)
+        ? Object.assign({ matchCount: -1, randomScore: 1 }, ...sortArray)
         : Object.assign({}, ...sortArray),
     });
   } else if (productDescription) {
-    pipeline.push({ $sort: { matchCount: -1, _id: 1 } });
+    pipeline.push({ $sort: { matchCount: -1, randomScore: 1 } });
   }
 
   pipeline.push({
