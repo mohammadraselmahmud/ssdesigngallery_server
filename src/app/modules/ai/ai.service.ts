@@ -9,7 +9,7 @@ import httpStatus from 'http-status';
 const replicate = new Replicate({
   auth: config?.replicate_api_key,
 });
-const REPLICATE_MODEL = 'black-forest-labs/flux-2-pro';
+export const REPLICATE_MODEL = 'black-forest-labs/flux-2-pro';
 
 export interface GeneratePreviewResponse {
   generatedUrl: string;
@@ -19,30 +19,44 @@ export interface GeneratePreviewResponse {
   remainingCredit: number;
 }
 
-const getOutputUrl = (output: unknown): string => {
+export const getOutputUrl = (output: unknown): string => {
   const value = Array.isArray(output) ? output[0] : output;
 
   if (typeof value === 'string') {
     return value;
   }
 
-  if (
-    value &&
-    typeof value === 'object' &&
-    'url' in value &&
-    typeof value.url === 'function'
-  ) {
-    return String(value.url());
+  if (value && typeof value === 'object') {
+    if ('url' in value) {
+      if (typeof (value as any).url === 'function') {
+        return String((value as any).url());
+      }
+      if (typeof (value as any).url === 'string') {
+        return (value as any).url;
+      }
+    }
+    if (typeof value.toString === 'function') {
+      const str = value.toString();
+      if (str && str !== '[object Object]') {
+        return str;
+      }
+    }
   }
 
-  throw new Error('AI model did not return an image URL.');
+  throw new AppError(
+    httpStatus.INTERNAL_SERVER_ERROR,
+    'AI model did not return an image URL.',
+  );
 };
 
 export async function generateSSPreview(
   data: GeneratePreviewInput,
   userId?: string,
+  replicateClient?: { run: (...args: any[]) => Promise<any> },
 ): Promise<GeneratePreviewResponse> {
-  if (!config.replicate_api_key) {
+  const client = replicateClient || replicate;
+
+  if (!replicateClient && !config.replicate_api_key) {
     throw new AppError(
       httpStatus.INTERNAL_SERVER_ERROR,
       'REPLICATE_API_TOKEN is not configured.',

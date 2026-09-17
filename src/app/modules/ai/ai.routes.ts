@@ -7,9 +7,17 @@ import { aiValidation } from './ai.validation';
 
 const router = Router();
 
+const allowedRoles = [
+  USER_ROLE.user,
+  USER_ROLE.vendor,
+  USER_ROLE.admin,
+  USER_ROLE.sub_admin,
+  USER_ROLE.super_admin,
+];
+
 router.post(
   '/ss-preview',
-  //   auth(USER_ROLE.vendor),
+  auth(...allowedRoles),
   validateRequest(aiValidation.generatePreviewSchema),
   aiControllers.ssPreview,
 );

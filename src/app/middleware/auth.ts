@@ -23,11 +23,11 @@ const auth = (...userRoles: string[]) => {
       throw new AppError(httpStatus.UNAUTHORIZED, 'unauthorized');
     }
     const { role, userId } = decode;
-    const isUserExist = User.IsUserExistId(userId);
+    const isUserExist = await User.IsUserExistId(userId);
     if (!isUserExist) {
       throw new AppError(httpStatus.NOT_FOUND, 'user not found');
     }
-    if (userRoles && !userRoles.includes(role)) {
+    if (userRoles && userRoles.length > 0 && !userRoles.includes(role)) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized');
     }
     req.user = decode;

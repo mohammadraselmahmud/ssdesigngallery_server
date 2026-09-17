@@ -15,28 +15,36 @@ const uploadFields = [
   { name: 'video', maxCount: 1 },
 ];
 
+const adminRoles = [
+  USER_ROLE.admin,
+  USER_ROLE.super_admin,
+  USER_ROLE.sub_admin,
+];
+
 router.post(
   '/',
-  auth(USER_ROLE.admin),
+  auth(...adminRoles),
   upload.fields(uploadFields),
   parseData(),
   uploadMultiple(uploadFields),
   validateRequest(adsValidation.createAdsSchema),
   adsController.createAds,
 );
+
 router.patch(
   '/:id',
-  auth(USER_ROLE.admin),
-
+  auth(...adminRoles),
   upload.fields(uploadFields),
   parseData(),
-  validateRequest(adsValidation.updateAdsSchema),
   uploadMultiple(uploadFields),
+  validateRequest(adsValidation.updateAdsSchema),
   adsController.updateAds,
 );
-router.delete('/:id', auth(USER_ROLE.admin), adsController.deleteAds);
+
+router.delete('/:id', auth(...adminRoles), adsController.deleteAds);
+
+router.get('/', adsController.getAllAds);
 router.get('/public', adsController.getPublicAds);
 router.get('/:id', adsController.getAdsById);
-router.get('/', adsController.getAllAds);
 
 export const adsRoutes = router;

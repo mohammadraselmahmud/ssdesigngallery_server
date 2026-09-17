@@ -6,17 +6,22 @@ import httpStatus from 'http-status';
 
 const ssPreview = catchAsync(async (req: Request, res: Response) => {
   const { userImageUrl, ssDesignUrl, promptInstruction } = req.body;
-  const generatedUrl = await generateSSPreview({
-    userImageUrl,
-    ssDesignUrl,
-    promptInstruction,
-  });
+  const userId = req.user?.userId || req.user?.id;
+
+  const result = await generateSSPreview(
+    {
+      userImageUrl,
+      ssDesignUrl,
+      promptInstruction,
+    },
+    userId,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Image generated successfully',
-    data: { generatedUrl },
+    data: result,
   });
 });
 

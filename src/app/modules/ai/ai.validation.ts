@@ -1,30 +1,75 @@
 import { z } from 'zod';
 import config from '../../config';
 
-const getHostname = (value?: string): string | undefined => {
-  if (!value) return undefined;
+export const getAllowedImageHosts = (): string[] => {
+  const configuredUrls = [
+    config.aws.img_base_url,
+    config.aws.s3BaseUrl,
+    config.aws.s3_api,
+    process.env.IMG_BASE_URL,
+    process.env.S3_BASE_URL,
+    process.env.S3_API,
+  ];
 
-  try {
-    return new URL(value).hostname;
-  } catch {
-    return undefined;
+  const hosts = new Set<string>();
+
+  for (const urlStr of configuredUrls) {
+    if (!urlStr) continue;
+    try {
+      const url = new URL(
+        urlStr.startsWith('http://') || urlStr.startsWith('https://')
+          ? urlStr
+          : `https://${urlStr}`,
+      );
+      if (url.hostname) {
+        hosts.add(url.hostname.toLowerCase());
+      }
+    } catch {
+      // ignore invalid URLs in env
+    }
   }
-};
 
-const allowedImageHosts = [
-  getHostname(config.aws.s3BaseUrl),
-  getHostname(config.aws.img_base_url),
-].filter((host): host is string => Boolean(host));
+  if (config.aws.bucket) {
+    if (config.aws.region) {
+      hosts.add(
+        `${config.aws.bucket}.s3.${config.aws.region}.amazonaws.com`.toLowerCase(),
+      );
+      hosts.add(`s3.${config.aws.region}.amazonaws.com`.toLowerCase());
+    }
+    hosts.add(`${config.aws.bucket}.s3.amazonaws.com`.toLowerCase());
+  }
+
+  return Array.from(hosts);
+};
 
 const imageUrlSchema = z
   .string({ required_error: 'Image URL is required' })
-  .url('Image URL must be valid')
-  .refine(value => new URL(value).protocol === 'https:', {
-    message: 'Image URL must use HTTPS',
-  })
-  .refine(value => allowedImageHosts.includes(new URL(value).hostname), {
-    message: 'Image URL must be a direct URL from the configured S3 image host',
-  });
+  .url({ message: 'Image URL must be valid' })
+  .refine(
+    value => {
+      try {
+        return new URL(value).protocol === 'https:';
+      } catch {
+        return false;
+      }
+    },
+    {
+      message: 'Image URL must use HTTPS',
+    },
+  )
+  .refine(
+    value => {
+      try {
+        const hostname = new URL(value).hostname.toLowerCase();
+        return getAllowedImageHosts().includes(hostname);
+      } catch {
+        return false;
+      }
+    },
+    {
+      message: 'Image URL must be a direct URL from the configured S3 image host',
+    },
+  );
 
 const generatePreviewSchema = z.object({
   body: z.object({
@@ -36,4 +81,5 @@ const generatePreviewSchema = z.object({
 
 export const aiValidation = {
   generatePreviewSchema,
+  getAllowedImageHosts,
 };

@@ -3,10 +3,18 @@ import { IAds } from './ads.interface';
 import Ads from './ads.models';
 import QueryBuilder from '../../class/builder/QueryBuilder';
 import AppError from '../../error/AppError';
+import { adsSearchableFields } from './ads.constants';
 
-const createAds = async (payload: IAds) => {
-  if (payload?.image) payload.image = payload?.image[0];
-  if (payload?.video) payload.video = payload?.video[0];
+const createAds = async (payload: any) => {
+  if (Array.isArray(payload?.image)) {
+    payload.image = payload.image.length > 0 ? payload.image[0] : '';
+  }
+  if (Array.isArray(payload?.video)) {
+    payload.video = payload.video.length > 0 ? payload.video[0] : '';
+  }
+  if (payload.expiredAt === '') {
+    payload.expiredAt = null;
+  }
   const result = await Ads.create(payload);
   if (!result) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create ads');
@@ -15,9 +23,14 @@ const createAds = async (payload: IAds) => {
 };
 
 const getAllAds = async (query: Record<string, any> = {}) => {
-  const queryParams = { ...query, isDeleted: false };
-  const adsModel = new QueryBuilder(Ads.find(), queryParams)
-    .search(['title', 'description'])
+  const queryParams = { ...query };
+  delete queryParams.isDeleted;
+
+  const adsModel = new QueryBuilder(
+    Ads.find({ isDeleted: { $ne: true } }),
+    queryParams,
+  )
+    .search(adsSearchableFields)
     .filter()
     .paginate()
     .sort()
@@ -33,7 +46,7 @@ const getAllAds = async (query: Record<string, any> = {}) => {
 };
 
 const getPublicAds = async (query: Record<string, any> = {}) => {
-  const limit = Number(query.limit) || 10;
+  const limit = Math.max(1, Number(query.limit) || 10);
   const now = new Date();
 
   const ads = await Ads.find({
@@ -61,9 +74,24 @@ const getAdsById = async (id: string) => {
   return result;
 };
 
-const updateAds = async (id: string, payload: Partial<IAds>) => {
-  if (payload?.image) payload.image = payload?.image[0];
-  if (payload?.video) payload.video = payload?.video[0];
+const updateAds = async (id: string, payload: any) => {
+  if (Array.isArray(payload?.image)) {
+    if (payload.image.length > 0) {
+      payload.image = payload.image[0];
+    } else {
+      delete payload.image;
+    }
+  }
+  if (Array.isArray(payload?.video)) {
+    if (payload.video.length > 0) {
+      payload.video = payload.video[0];
+    } else {
+      delete payload.video;
+    }
+  }
+  if (payload.expiredAt === '') {
+    payload.expiredAt = null;
+  }
   const result = await Ads.findOneAndUpdate(
     { _id: id, isDeleted: { $ne: true } },
     payload,
