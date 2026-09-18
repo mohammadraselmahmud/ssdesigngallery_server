@@ -100,7 +100,7 @@ const findRelatedProducts = (query) => __awaiter(void 0, void 0, void 0, functio
     var _a, _b;
     const { filters, pagination } = yield (0, pickQuery_1.default)(query);
     const { productDescription, searchTerm } = filters, filtersData = __rest(filters, ["productDescription", "searchTerm"]);
-    const pipeline = [];
+    const pipeline = [{ $match: { isDeleted: false } }];
     if (filtersData === null || filtersData === void 0 ? void 0 : filtersData.categoryId) {
         filtersData['categoryId'] = new mongoose_1.Types.ObjectId(filtersData === null || filtersData === void 0 ? void 0 : filtersData.categoryId);
     }
@@ -109,19 +109,39 @@ const findRelatedProducts = (query) => __awaiter(void 0, void 0, void 0, functio
             .split(',')
             .map((keyword) => keyword.trim())
             .filter(Boolean);
+        const keywordRegex = keywords
+            .map((keyword) => keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+            .join('|');
         pipeline.push({
             $match: {
-                productDescription: { $in: keywords },
+                productDescription: { $regex: keywordRegex, $options: 'i' },
             },
         });
         pipeline.push({
             $addFields: {
                 matchCount: {
                     $size: {
-                        $setIntersection: ['$productDescription', keywords],
+                        $filter: {
+                            input: keywords,
+                            as: 'keyword',
+                            cond: {
+                                $anyElementTrue: {
+                                    $map: {
+                                        input: '$productDescription',
+                                        as: 'description',
+                                        in: {
+                                            $regexMatch: {
+                                                input: '$$description',
+                                                regex: '$$keyword',
+                                                options: 'i',
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
-                randomScore: { $rand: {} },
             },
         });
     }
@@ -164,7 +184,7 @@ const findRelatedProducts = (query) => __awaiter(void 0, void 0, void 0, functio
     }
     // Sorting condition
     const { page, limit, skip, sortBy: sort, } = pagination_helpers_1.paginationHelper.calculatePagination(pagination);
-    if (sort) {
+    if (query.sortBy || query.sortOrder) {
         const sortArray = sort.split(',').map(field => {
             const trimmedField = field.trim();
             if (trimmedField.startsWith('-')) {
@@ -174,12 +194,15 @@ const findRelatedProducts = (query) => __awaiter(void 0, void 0, void 0, functio
         });
         pipeline.push({
             $sort: productDescription
-                ? Object.assign({ matchCount: -1, randomScore: 1 }, ...sortArray)
+                ? Object.assign({ matchCount: -1 }, ...sortArray)
                 : Object.assign({}, ...sortArray),
         });
     }
     else if (productDescription) {
-        pipeline.push({ $sort: { matchCount: -1, randomScore: 1 } });
+        pipeline.push({ $sort: { matchCount: -1, createdAt: -1 } });
+    }
+    else {
+        pipeline.push({ $sort: { createdAt: -1 } });
     }
     pipeline.push({
         $facet: {

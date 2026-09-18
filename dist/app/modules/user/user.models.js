@@ -44,7 +44,7 @@ const userSchema = new mongoose_1.Schema({
     },
     emailVerified: {
         type: Boolean,
-        default: null
+        default: null,
     },
     registerWithGoogle: {
         type: Boolean,

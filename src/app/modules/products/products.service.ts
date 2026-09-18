@@ -89,7 +89,7 @@ const findKeywords = async () => {
 const findRelatedProducts = async (query: Record<string, any>) => {
   const { filters, pagination } = await pickQuery(query);
   const { productDescription, searchTerm, ...filtersData } = filters;
-  const pipeline: any[] = [];
+  const pipeline: any[] = [{ $match: { isDeleted: false } }];
 
   if (filtersData?.categoryId) {
     filtersData['categoryId'] = new Types.ObjectId(filtersData?.categoryId);
@@ -100,10 +100,13 @@ const findRelatedProducts = async (query: Record<string, any>) => {
       .split(',')
       .map((keyword: string) => keyword.trim())
       .filter(Boolean);
+    const keywordRegex = keywords
+      .map((keyword: string) => keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('|');
 
     pipeline.push({
       $match: {
-        productDescription: { $in: keywords },
+        productDescription: { $regex: keywordRegex, $options: 'i' },
       },
     });
 
@@ -111,10 +114,27 @@ const findRelatedProducts = async (query: Record<string, any>) => {
       $addFields: {
         matchCount: {
           $size: {
-            $setIntersection: ['$productDescription', keywords],
+            $filter: {
+              input: keywords,
+              as: 'keyword',
+              cond: {
+                $anyElementTrue: {
+                  $map: {
+                    input: '$productDescription',
+                    as: 'description',
+                    in: {
+                      $regexMatch: {
+                        input: '$$description',
+                        regex: '$$keyword',
+                        options: 'i',
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         },
-        randomScore: { $rand: {} },
       },
     });
   }
@@ -167,7 +187,7 @@ const findRelatedProducts = async (query: Record<string, any>) => {
     sortBy: sort,
   } = paginationHelper.calculatePagination(pagination);
 
-  if (sort) {
+  if (query.sortBy || query.sortOrder) {
     const sortArray = sort.split(',').map(field => {
       const trimmedField = field.trim();
       if (trimmedField.startsWith('-')) {
@@ -178,11 +198,13 @@ const findRelatedProducts = async (query: Record<string, any>) => {
 
     pipeline.push({
       $sort: productDescription
-        ? Object.assign({ matchCount: -1, randomScore: 1 }, ...sortArray)
+        ? Object.assign({ matchCount: -1 }, ...sortArray)
         : Object.assign({}, ...sortArray),
     });
   } else if (productDescription) {
-    pipeline.push({ $sort: { matchCount: -1, randomScore: 1 } });
+    pipeline.push({ $sort: { matchCount: -1, createdAt: -1 } });
+  } else {
+    pipeline.push({ $sort: { createdAt: -1 } });
   }
 
   pipeline.push({
