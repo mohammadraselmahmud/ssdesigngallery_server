@@ -12,6 +12,7 @@ export interface IUser {
   role: string;
   oneTimeCode: string;
   emailVerified: boolean;
+  freeAiImageCount: number;
 }
 
 export interface UserModel extends Model<IUser> {

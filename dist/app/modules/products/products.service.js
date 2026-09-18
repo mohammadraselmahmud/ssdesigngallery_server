@@ -105,10 +105,23 @@ const findRelatedProducts = (query) => __awaiter(void 0, void 0, void 0, functio
         filtersData['categoryId'] = new mongoose_1.Types.ObjectId(filtersData === null || filtersData === void 0 ? void 0 : filtersData.categoryId);
     }
     if (productDescription) {
-        const keywords = productDescription.split(',');
+        const keywords = productDescription
+            .split(',')
+            .map((keyword) => keyword.trim())
+            .filter(Boolean);
         pipeline.push({
             $match: {
                 productDescription: { $in: keywords },
+            },
+        });
+        pipeline.push({
+            $addFields: {
+                matchCount: {
+                    $size: {
+                        $setIntersection: ['$productDescription', keywords],
+                    },
+                },
+                randomScore: { $rand: {} },
             },
         });
     }
@@ -159,7 +172,14 @@ const findRelatedProducts = (query) => __awaiter(void 0, void 0, void 0, functio
             }
             return { [trimmedField]: 1 };
         });
-        pipeline.push({ $sort: Object.assign({}, ...sortArray) });
+        pipeline.push({
+            $sort: productDescription
+                ? Object.assign({ matchCount: -1, randomScore: 1 }, ...sortArray)
+                : Object.assign({}, ...sortArray),
+        });
+    }
+    else if (productDescription) {
+        pipeline.push({ $sort: { matchCount: -1, randomScore: 1 } });
     }
     pipeline.push({
         $facet: {

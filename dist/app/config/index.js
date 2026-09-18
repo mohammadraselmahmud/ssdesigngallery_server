@@ -2,6 +2,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
@@ -30,8 +31,10 @@ exports.default = {
     bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
     jwt_access_secret: process.env.JWT_ACCESS_SECRET,
     jwt_refresh_secret: process.env.JWT_REFRESH_SECRET,
-    jwt_access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
-    jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
+    jwt_access_expires_in: (((_a = process.env.JWT_ACCESS_EXPIRES_IN) === null || _a === void 0 ? void 0 : _a.trim()) ||
+        '30d'),
+    jwt_refresh_expires_in: (((_b = process.env.JWT_REFRESH_EXPIRES_IN) === null || _b === void 0 ? void 0 : _b.trim()) ||
+        '365d'),
     nodemailer_host_email: process.env.NODEMAILER_HOST_EMAIL,
     nodemailer_host_pass: process.env.NODEMAILER_HOST_PASS,
     socket_port: process.env.SOCKET_PORT,

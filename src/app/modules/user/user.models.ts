@@ -29,16 +29,15 @@ const userSchema: Schema<IUser> = new Schema(
       default: null,
     },
 
-
     password: {
       type: String,
       required: false,
     },
     emailVerified: {
-      type: Boolean, 
-      default:null
+      type: Boolean,
+      default: null,
     },
-      registerWithGoogle: {
+    registerWithGoogle: {
       type: Boolean,
       default: false,
     },
@@ -52,6 +51,11 @@ const userSchema: Schema<IUser> = new Schema(
       type: String,
       enum: Role,
       default: USER_ROLE.user,
+    },
+    freeAiImageCount: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
   },
   {

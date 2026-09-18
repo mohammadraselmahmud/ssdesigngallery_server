@@ -60,6 +60,11 @@ const userSchema = new mongoose_1.Schema({
         enum: user_constants_1.Role,
         default: user_constants_1.USER_ROLE.user,
     },
+    freeAiImageCount: {
+        type: Number,
+        default: 0,
+        min: 0,
+    },
 }, {
     timestamps: true,
 });

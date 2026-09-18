@@ -5,6 +5,7 @@ import Subscription from '../subscription/subscription.models';
 import { IPackage } from '../package/package.interface';
 import AppError from '../../error/AppError';
 import httpStatus from 'http-status';
+import { User } from '../user/user.models';
 
 const replicate = new Replicate({
   auth: config?.replicate_api_key,
@@ -14,9 +15,11 @@ export const REPLICATE_MODEL = 'black-forest-labs/flux-2-pro';
 export interface GeneratePreviewResponse {
   generatedUrl: string;
   subscriptionId?: string;
-  totalCredit: number;
-  usedCredit: number;
-  remainingCredit: number;
+  totalCredit?: number;
+  usedCredit?: number;
+  remainingCredit?: number;
+  freeAiImageCount?: number;
+  freeAiImageLimit?: number;
 }
 
 export const getOutputUrl = (output: unknown): string => {
@@ -88,30 +91,54 @@ export async function generateSSPreview(
     isDeleted: false,
   }).populate('package');
 
-  if (!subscription) {
-    throw new AppError(
-      httpStatus.PAYMENT_REQUIRED,
-      'Active subscription required to generate AI images. Please subscribe to a package.',
-    );
-  }
+  let totalCredit: number | undefined;
+  let usedCredit: number | undefined;
+  let remainingCredit: number | undefined;
+  let freeAiImageCount: number | undefined;
+  let freeSlotReserved = false;
 
-  const pkg = subscription.package as IPackage;
-  const totalCredit =
-    subscription.totalCredit !== undefined && subscription.totalCredit !== null
-      ? subscription.totalCredit
-      : pkg?.limit || 0;
-  const usedCredit = subscription.usedCredit || 0;
-  const remainingCredit =
-    subscription.remainingCredit !== undefined &&
-    subscription.remainingCredit !== null
-      ? subscription.remainingCredit
-      : Math.max(0, totalCredit - usedCredit);
+  if (subscription) {
+    const pkg = subscription.package as IPackage;
+    totalCredit =
+      subscription.totalCredit !== undefined &&
+      subscription.totalCredit !== null
+        ? subscription.totalCredit
+        : pkg?.limit || 0;
+    usedCredit = subscription.usedCredit || 0;
+    remainingCredit =
+      subscription.remainingCredit !== undefined &&
+      subscription.remainingCredit !== null
+        ? subscription.remainingCredit
+        : Math.max(0, totalCredit - usedCredit);
 
-  if (remainingCredit <= 0) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      'Your subscription credit limit has been exhausted. Please renew or upgrade your plan.',
-    );
+    if (remainingCredit <= 0) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        'Your subscription credit limit has been exhausted. Please renew or upgrade your plan.',
+      );
+    }
+  } else {
+    const freeUser = await User.findOneAndUpdate(
+      {
+        _id: userId,
+        $or: [
+          { freeAiImageCount: { $lt: 2 } },
+          { freeAiImageCount: { $exists: false } },
+        ],
+      },
+      { $inc: { freeAiImageCount: 1 } },
+      { new: true, projection: { freeAiImageCount: 1 } },
+    ).lean();
+
+    if (!freeUser) {
+      throw new AppError(
+        httpStatus.PAYMENT_REQUIRED,
+        'You have used your 2 free AI images. Please subscribe to continue generating images.',
+      );
+    }
+
+    freeAiImageCount = freeUser.freeAiImageCount;
+    freeSlotReserved = true;
   }
 
   const basePrompt =
@@ -121,35 +148,61 @@ export async function generateSSPreview(
     ? `${basePrompt}, ${data.promptInstruction}`
     : basePrompt;
 
-  const output: unknown = await replicate.run(REPLICATE_MODEL, {
-    input: {
-      input_images: [data.userImageUrl, data.ssDesignUrl],
-      prompt: finalPrompt,
-      aspect_ratio: 'match_input_image',
-      resolution: '1 MP',
-      output_format: 'jpg',
-      output_quality: 80,
-      safety_tolerance: 2,
-      prompt_upsampling: false,
-    },
-  });
+  let output: unknown;
+  try {
+    output = await replicate.run(REPLICATE_MODEL, {
+      input: {
+        input_images: [data.userImageUrl, data.ssDesignUrl],
+        prompt: finalPrompt,
+        aspect_ratio: 'match_input_image',
+        resolution: '1 MP',
+        output_format: 'jpg',
+        output_quality: 80,
+        safety_tolerance: 2,
+        prompt_upsampling: false,
+      },
+    });
+  } catch (error) {
+    if (freeSlotReserved) {
+      await User.updateOne({ _id: userId }, { $inc: { freeAiImageCount: -1 } });
+    }
+    throw error;
+  }
 
-  const generatedUrl = getOutputUrl(output);
+  let generatedUrl: string;
+  try {
+    generatedUrl = getOutputUrl(output);
+  } catch (error) {
+    if (freeSlotReserved) {
+      await User.updateOne({ _id: userId }, { $inc: { freeAiImageCount: -1 } });
+    }
+    throw error;
+  }
 
   // Deduct credit upon successful image generation
-  const updatedUsedCredit = usedCredit + 1;
-  const updatedRemainingCredit = Math.max(0, totalCredit - updatedUsedCredit);
+  if (subscription) {
+    const updatedUsedCredit = (usedCredit || 0) + 1;
+    const updatedRemainingCredit = Math.max(
+      0,
+      (totalCredit || 0) - updatedUsedCredit,
+    );
 
-  subscription.totalCredit = totalCredit;
-  subscription.usedCredit = updatedUsedCredit;
-  subscription.remainingCredit = updatedRemainingCredit;
-  await subscription.save();
+    subscription.totalCredit = totalCredit || 0;
+    subscription.usedCredit = updatedUsedCredit;
+    subscription.remainingCredit = updatedRemainingCredit;
+    await subscription.save();
+
+    usedCredit = updatedUsedCredit;
+    remainingCredit = updatedRemainingCredit;
+  }
 
   return {
     generatedUrl,
-    subscriptionId: subscription._id?.toString(),
+    subscriptionId: subscription?._id?.toString(),
     totalCredit,
-    usedCredit: updatedUsedCredit,
-    remainingCredit: updatedRemainingCredit,
+    usedCredit,
+    remainingCredit,
+    freeAiImageCount,
+    freeAiImageLimit: 2,
   };
 }
