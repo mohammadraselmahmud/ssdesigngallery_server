@@ -20,6 +20,7 @@ export interface GeneratePreviewResponse {
   remainingCredit?: number;
   freeAiImageCount?: number;
   freeAiImageLimit?: number;
+  unlimited?: boolean;
 }
 
 export const getOutputUrl = (output: unknown): string => {
@@ -55,6 +56,7 @@ export const getOutputUrl = (output: unknown): string => {
 export async function generateSSPreview(
   data: GeneratePreviewInput,
   userId?: string,
+  userRole?: string,
   replicateClient?: { run: (...args: any[]) => Promise<any> },
 ): Promise<GeneratePreviewResponse> {
   const client = replicateClient || replicate;
@@ -73,23 +75,31 @@ export async function generateSSPreview(
     );
   }
 
-  const now = new Date();
-  await Subscription.updateMany(
-    {
-      user: userId,
-      status: 'active',
-      endDate: { $lte: now },
-      isDeleted: false,
-    },
-    { $set: { status: 'expired' } },
+  const isUnlimitedUser = ['admin', 'sub_admin', 'super_admin'].includes(
+    userRole || '',
   );
 
-  const subscription = await Subscription.findOne({
-    user: userId,
-    status: 'active',
-    endDate: { $gt: now },
-    isDeleted: false,
-  }).populate('package');
+  const now = new Date();
+  const subscription = isUnlimitedUser
+    ? null
+    : await (async () => {
+        await Subscription.updateMany(
+          {
+            user: userId,
+            status: 'active',
+            endDate: { $lte: now },
+            isDeleted: false,
+          },
+          { $set: { status: 'expired' } },
+        );
+
+        return Subscription.findOne({
+          user: userId,
+          status: 'active',
+          endDate: { $gt: now },
+          isDeleted: false,
+        }).populate('package');
+      })();
 
   let totalCredit: number | undefined;
   let usedCredit: number | undefined;
@@ -117,7 +127,7 @@ export async function generateSSPreview(
         'Your subscription credit limit has been exhausted. Please renew or upgrade your plan.',
       );
     }
-  } else {
+  } else if (!isUnlimitedUser) {
     const freeUser = await User.findOneAndUpdate(
       {
         _id: userId,
@@ -150,7 +160,7 @@ export async function generateSSPreview(
 
   let output: unknown;
   try {
-    output = await replicate.run(REPLICATE_MODEL, {
+    output = await client.run(REPLICATE_MODEL, {
       input: {
         input_images: [data.userImageUrl, data.ssDesignUrl],
         prompt: finalPrompt,
@@ -204,5 +214,6 @@ export async function generateSSPreview(
     remainingCredit,
     freeAiImageCount,
     freeAiImageLimit: 2,
+    unlimited: isUnlimitedUser,
   };
 }

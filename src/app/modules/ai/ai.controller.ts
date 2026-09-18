@@ -15,6 +15,7 @@ const ssPreview = catchAsync(async (req: Request, res: Response) => {
       promptInstruction,
     },
     userId,
+    req.user?.role,
   );
 
   sendResponse(res, {
