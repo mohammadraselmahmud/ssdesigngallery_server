@@ -3,6 +3,7 @@ import { Model, ObjectId } from 'mongoose';
 export interface IPackage {
   _id?: string;
   title: string;
+  planName: string;
   productId: string;
   description: string;
   price: number;

@@ -4,6 +4,7 @@ import { IPackage, IPackageModules } from './package.interface';
 const packageSchema = new Schema<IPackage>(
   {
     title: { type: 'string', required: true },
+    planName: { type: 'string', required: false },
     productId: { type: 'string', required: true },
     description: { type: 'string' },
     price: { type: 'number', required: true },
