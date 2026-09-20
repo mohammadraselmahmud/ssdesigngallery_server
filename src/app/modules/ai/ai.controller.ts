@@ -1,19 +1,14 @@
 import { Request, Response } from 'express';
-import { generateSSPreview } from './ai.service';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import httpStatus from 'http-status';
+import { generateSsDesignPreview } from './ai.service';
 
-const ssPreview = catchAsync(async (req: Request, res: Response) => {
-  const { userImageUrl, ssDesignUrl, promptInstruction } = req.body;
+const ssPreview = catchAsync(async (req: Request, res: Response) => { 
   const userId = req.user?.userId || req.user?.id;
 
-  const result = await generateSSPreview(
-    {
-      userImageUrl,
-      ssDesignUrl,
-      promptInstruction,
-    },
+  const result = await generateSsDesignPreview(
+    req.body,
     userId,
     req.user?.role,
   );

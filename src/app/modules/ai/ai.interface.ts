@@ -5,8 +5,9 @@
 // }
 
 export interface GeneratePreviewInput {
-  customerImageUrl: string;
-  designImageUrl: string;
+  userImageUrl: string;
+  ssDesignUrl: string;
+  promptInstruction?: string;
   category: string;
 }
 
