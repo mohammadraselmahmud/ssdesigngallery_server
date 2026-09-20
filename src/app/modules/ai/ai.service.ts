@@ -10,7 +10,8 @@ import { User } from '../user/user.models';
 const replicate = new Replicate({
   auth: config?.replicate_api_key,
 });
-export const REPLICATE_MODEL = 'black-forest-labs/flux-2-pro';
+// export const REPLICATE_MODEL = 'black-forest-labs/flux-2-pro';
+export const REPLICATE_MODEL = 'prunaai/p-image-edit';
 
 export interface GeneratePreviewResponse {
   generatedUrl: string;
@@ -151,25 +152,58 @@ export async function generateSSPreview(
     freeSlotReserved = true;
   }
 
-  const basePrompt =
-    'Edit image 1 by fitting the stainless steel grill design from image 2 into the existing window or door frame. Preserve the exact room, wall, frame geometry, perspective, and lighting from image 1. Preserve the grill pattern and proportions from image 2. Make the installation photorealistic with a natural metallic finish.';
+  // const basePrompt =
+  //   'Edit image 1 by fitting the stainless steel grill design from image 2 into the existing window or door frame. Preserve the exact room, wall, frame geometry, perspective, and lighting from image 1. Preserve the grill pattern and proportions from image 2. Make the installation photorealistic with a natural metallic finish.';
+  const basePrompt = `
+Use image 1 as the primary/base image.
+
+Install the stainless steel grill design from image 2
+inside the existing window or door opening in image 1.
+
+IMPORTANT:
+- Preserve image 1's room exactly.
+- Preserve the wall and frame geometry.
+- Preserve the original camera angle and perspective.
+- Preserve the grill pattern and proportions from image 2.
+- Scale and perspective-fit the grill into the opening.
+- Make it look physically installed.
+- Use realistic stainless steel material.
+- Match existing lighting and shadows.
+- Keep the result photorealistic.
+- Do not modify unrelated parts of image 1.
+`;
 
   const finalPrompt = data.promptInstruction
-    ? `${basePrompt}, ${data.promptInstruction}`
+    ? `${basePrompt}\nAdditional instruction: ${data.promptInstruction}`
     : basePrompt;
 
   let output: unknown;
   try {
+    // output = await client.run(REPLICATE_MODEL, {
+    //   input: {
+    //     input_images: [data.userImageUrl, data.ssDesignUrl],
+    //     prompt: finalPrompt,
+    //     aspect_ratio: 'match_input_image',
+    //     resolution: '1 MP',
+    //     output_format: 'jpg',
+    //     output_quality: 80,
+    //     safety_tolerance: 2,
+    //     prompt_upsampling: false,
+    //   },
+    // });
     output = await client.run(REPLICATE_MODEL, {
       input: {
-        input_images: [data.userImageUrl, data.ssDesignUrl],
+        images: [
+          data.userImageUrl, // image 1 = main room/window image
+          data.ssDesignUrl, // image 2 = grill design
+        ],
         prompt: finalPrompt,
         aspect_ratio: 'match_input_image',
-        resolution: '1 MP',
-        output_format: 'jpg',
-        output_quality: 80,
-        safety_tolerance: 2,
-        prompt_upsampling: false,
+
+        // Complex architectural editing হলে false better
+        turbo: false,
+
+        disable_safety_checker: false,
       },
     });
   } catch (error) {
