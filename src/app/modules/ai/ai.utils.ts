@@ -1,34 +1,40 @@
 import httpStatus from 'http-status';
 import AppError from '../../error/AppError';
 
-export const buildSsDesignPrompt = (category: string): string => {
+export const buildSsDesignPrompt = (
+  category: string,
+  promptInstruction?: string,
+): string => {
   return `
-Edit image 1 using the SS design from image 2.
+You are performing a precise architectural photo edit, not creating a new image.
 
-Image 1 is the customer's real photo.
-Image 2 is the exact selected "${category}" stainless-steel design reference.
+IMAGE ROLES (strict):
+- Image 1 is the customer's real location photo. It is the only base image and must remain the output scene.
+- Image 2 is a product-reference photo of the selected ${category} stainless-steel (SS) design. Extract and use only its SS design: pattern, bars, spacing, geometry, border, joints, and proportions. Do not copy image 2's background, walls, floor, people, lighting, or camera view.
 
-Task:
-Find the correct installation area for a ${category} in image 1 and realistically install the design from image 2 there.
+TASK:
+1. Inspect image 1 and locate the real existing frame/opening where a ${category} belongs (for example a window, door, balcony, stair opening, or gate frame).
+2. Install the SS element from image 2 inside that exact frame/opening in image 1.
+3. If no suitable real frame/opening is visible in image 1, leave image 1 unchanged. Never invent an opening or place the SS element arbitrarily.
 
-Important requirements:
-- Preserve image 1 and its original building, room, walls, floor, objects, people, background, camera angle and composition.
-- Do not generate a new house, room, staircase, balcony or environment.
-- Use image 2 as the design reference and preserve its pattern, structure, proportions and design identity as closely as possible.
-- Automatically detect the correct installation area based on the selected category.
-- Replace an existing similar structure only if necessary.
-- Scale, rotate and perspective-transform the SS design so it fits the real opening or installation area accurately.
-- Follow the real architectural boundaries and mounting points.
-- Make the stainless steel photorealistic with natural metallic reflections, realistic thickness, joints and supports.
-- Match the lighting, shadows, reflections and perspective of image 1.
-- Respect foreground objects and natural occlusion.
-- Do not place the design floating, outside the frame, oversized, undersized or in an unrelated area.
-- Modify only the required installation area.
+PLACEMENT RULES:
+- The installed design must stay fully inside the detected frame and attach to its real edges or mounting points.
+- Keep the complete design identity from image 2. Do not replace it with a generic grill, railing, gate, or different pattern.
+- Resize, rotate, and perspective-transform the SS element to fit the detected frame naturally; preserve its proportions unless a realistic installation requires cropping at the frame edges.
+- Respect occlusion: objects in front of the frame must remain in front of the installed SS element.
 
-Final result:
-Create one realistic photo showing how the selected ${category} design would look after professional installation in the customer's actual location.
+PRESERVATION RULES:
+- Preserve image 1's building, room, walls, floor, objects, people, background, camera angle, composition, and aspect ratio exactly.
+- Modify only the pixels needed to install the SS element inside the detected frame.
+- Do not generate a new house, room, staircase, balcony, gate, window, or environment.
+- Do not create a collage, side-by-side image, overlay, product mockup, separate render, or duplicate design.
 
-The result must look like a real installed photograph, not a collage, overlay, sketch or separate 3D render.
+REALISM:
+- Make the SS physically installed with realistic thickness, supports, joints, metallic reflections, lighting, shadows, and perspective consistent with image 1.
+
+${promptInstruction ? `Additional user instruction (follow only if it does not conflict with the rules above): ${promptInstruction}` : ''}
+
+Return one photorealistic edited version of image 1.
 `.trim();
 };
 

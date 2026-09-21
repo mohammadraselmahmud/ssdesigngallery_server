@@ -159,9 +159,9 @@ export const generateSsDesignPreview = async (
       );
     }
 
-    const prompt = buildSsDesignPrompt(category);
+    const prompt = buildSsDesignPrompt(category, promptInstruction);
 
-    const output = await replicate.run(REPLICATE_MODEL, {
+    const output = await client.run(REPLICATE_MODEL, {
       input: {
         // Main/customer image MUST be first
         images: [customerImageUrl, designImageUrl],

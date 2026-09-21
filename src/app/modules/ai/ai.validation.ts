@@ -75,6 +75,11 @@ const generatePreviewSchema = z.object({
   body: z.object({
     userImageUrl: imageUrlSchema,
     ssDesignUrl: imageUrlSchema,
+    category: z
+      .string({ required_error: 'SS design category is required' })
+      .trim()
+      .min(1, { message: 'SS design category is required' })
+      .max(100),
     promptInstruction: z.string().trim().max(1000).optional(),
   }),
 });
