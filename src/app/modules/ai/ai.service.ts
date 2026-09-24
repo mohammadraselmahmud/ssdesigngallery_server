@@ -29,7 +29,8 @@ const replicate = new Replicate({
   auth: config?.replicate_api_key,
 });
 
-export const REPLICATE_MODEL = 'prunaai/firered-image-edit-1.1';
+export const REPLICATE_MODEL =
+  'prunaai/firered-image-edit-1.1:2275e825ae9ed8a17168e0ea82ae6722fe60ca25652bb9e61b98887eb0ad5bcc';
 
 export const generateSsDesignPreview = async (
   payload: GeneratePreviewInput,
