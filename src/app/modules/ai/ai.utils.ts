@@ -6,38 +6,24 @@ export const buildSsDesignPrompt = (
   promptInstruction?: string,
 ): string => {
   return `
-You are performing a precise architectural photo edit, not creating a new image.
+Edit image 1 only. Return one photorealistic edited version of image 1, never image 2.
 
-IMAGE ROLES (strict):
-- Image 1 is the customer's real location photo. It is the only base image and must remain the output scene.
-- Image 2 is a product-reference photo of the selected ${category} stainless-steel (SS) design. Extract and use only its SS design: pattern, bars, spacing, geometry, border, joints, and proportions. Do not copy image 2's background, walls, floor, people, lighting, or camera view.
+Image 1 is the customer's construction/location photo and is the locked base scene.
+Image 2 is only the selected stainless-steel ${category} design reference.
 
-TASK:
-1. Inspect image 1 and locate the real existing frame/opening where a ${category} belongs (for example a window, door, balcony, stair opening, or gate frame).
-2. Install the SS element from image 2 inside that exact frame/opening in image 1.
-3. If no suitable real frame/opening is visible in image 1, leave image 1 unchanged. Never invent an opening or place the SS element arbitrarily.
+Find the real, unfinished ${category} opening in image 1: use the opening bounded by its existing left and right pillars/frame, top lintel/frame, and bottom threshold/floor. Install one complete ${category} in that exact opening.
 
-PLACEMENT RULES:
-- The installed design must stay fully inside the detected frame and attach to its real edges or mounting points.
-- Keep the complete design identity from image 2. Do not replace it with a generic grill, railing, gate, or different pattern.
-- Resize, rotate, and perspective-transform the SS element to fit the detected frame naturally; preserve its proportions unless a realistic installation requires cropping at the frame edges.
-- Respect occlusion: objects in front of the frame must remain in front of the installed SS element.
+The installed ${category} must fill and connect to that opening's real mounting edges: stretch from the left edge to the right edge and from the top frame to the bottom frame as a real installed ${category} would. Perspective-transform it to the camera angle of image 1. Do not place the design beside, in front of, above, below, or elsewhere in the construction photo.
 
-PRESERVATION RULES:
-- Preserve image 1's building, room, walls, floor, objects, people, background, camera angle, composition, and aspect ratio exactly.
-- Modify only the pixels needed to install the SS element inside the detected frame.
-- Do not generate a new house, room, staircase, balcony, gate, window, or environment.
-- Do not create a collage, side-by-side image, overlay, product mockup, separate render, or duplicate design.
+Copy only image 2's exact SS design identity: its pattern, bars, spacing, geometry, outer border, joints, and proportions. Do not use image 2's background or camera view. Do not replace it with a generic ${category} or a different pattern.
 
-REALISM:
-- Make the SS physically installed with realistic thickness, supports, joints, metallic reflections, lighting, shadows, and perspective consistent with image 1.
+Keep every part of image 1 unchanged except the pixels inside and immediately at the mounting edges of the detected opening. Preserve its building, walls, floor, objects, people, composition, and aspect ratio. Keep foreground objects in front of the installed ${category}. Add realistic SS thickness, hinges/supports where appropriate, shadows, reflections, and lighting that match image 1.
 
-${promptInstruction ? `Additional user instruction (follow only if it does not conflict with the rules above): ${promptInstruction}` : ''}
+If image 1 has no clear real ${category} opening, return image 1 unchanged. Never invent an opening, a new building, or a separate/pasted product image.
 
-Return one photorealistic edited version of image 1.
+${promptInstruction ? `Additional user instruction (follow only when it does not conflict with the placement and preservation rules above): ${promptInstruction}` : ''}
 `.trim();
 };
-
 export const getOutputUrl = (output: unknown): string => {
   const value = Array.isArray(output) ? output[0] : output;
 
