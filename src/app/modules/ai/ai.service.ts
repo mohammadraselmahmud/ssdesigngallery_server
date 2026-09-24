@@ -29,7 +29,7 @@ const replicate = new Replicate({
   auth: config?.replicate_api_key,
 });
 
-export const REPLICATE_MODEL = 'prunaai/p-image-edit';
+export const REPLICATE_MODEL = 'prunaai/firered-image-edit-1.1';
 
 export const generateSsDesignPreview = async (
   payload: GeneratePreviewInput,
@@ -163,25 +163,21 @@ export const generateSsDesignPreview = async (
 
     const output = await client.run(REPLICATE_MODEL, {
       input: {
-        // Main/customer image MUST be first
-        images: [customerImageUrl, designImageUrl],
-
+        // Image 1 is the original construction photo; image 2 is the SS design.
+        image: [customerImageUrl, designImageUrl],
         prompt,
 
-        // Maintain customer's photo ratio
+        // Preserve the uploaded photo's aspect ratio.
         aspect_ratio: 'match_input_image',
 
-        // SS placement is a complex architectural edit.
-        // false generally gives the model more room for quality.
-        turbo: false,
-
-        no_op: false,
-
-        // Keep safety checker enabled
-        disable_safety_checker: false,
+        // Prioritize instruction following and detailed architectural placement.
+        go_fast: false,
+        true_cfg_scale: 6,
+        num_inference_steps: 50,
+        output_format: 'webp',
+        output_quality: 100,
       },
     });
-
     const generatedUrl = getOutputUrl(output);
 
     return {
