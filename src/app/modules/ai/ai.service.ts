@@ -33,8 +33,7 @@ const replicate = new Replicate({
   auth: config?.replicate_api_key,
 });
 
-export const REPLICATE_MODEL =
-  'prunaai/firered-image-edit-1.1:2275e825ae9ed8a17168e0ea82ae6722fe60ca25652bb9e61b98887eb0ad5bcc';
+export const REPLICATE_MODEL = 'google/nano-banana';
 
 export const generateSsDesignPreview = async (
   payload: GeneratePreviewInput,
@@ -167,18 +166,13 @@ export const generateSsDesignPreview = async (
     const prompt = buildSsDesignPrompt(category, promptInstruction);
 
     const prediction = await client.predictions.create({
-      version:
-        '2275e825ae9ed8a17168e0ea82ae6722fe60ca25652bb9e61b98887eb0ad5bcc',
+      model: REPLICATE_MODEL,
       input: {
         // Image 1 is the original construction photo; image 2 is the SS design.
-        image: [customerImageUrl, designImageUrl],
+        image_input: [customerImageUrl, designImageUrl],
         prompt,
         aspect_ratio: 'match_input_image',
-        go_fast: false,
-        true_cfg_scale: 6,
-        num_inference_steps: 50,
-        output_format: 'webp',
-        output_quality: 100,
+        output_format: 'jpg',
       },
     });
     return {
