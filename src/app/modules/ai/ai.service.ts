@@ -6,7 +6,11 @@ import { IPackage } from '../package/package.interface';
 import AppError from '../../error/AppError';
 import httpStatus from 'http-status';
 import { User } from '../user/user.models';
-import { GeneratePreviewInput, GeneratePreviewResponse } from './ai.interface';
+import {
+  GeneratePreviewInput,
+  GeneratePreviewStatusResponse,
+  GeneratePreviewSubmissionResponse,
+} from './ai.interface';
 import { buildSsDesignPrompt, getOutputUrl } from './ai.utils';
 
 // const replicate = new Replicate({
@@ -36,8 +40,8 @@ export const generateSsDesignPreview = async (
   payload: GeneratePreviewInput,
   userId?: string,
     userRole?: string,
-    replicateClient?: { run: (...args: any[]) => Promise<any> },
-): Promise<GeneratePreviewResponse> => {
+    replicateClient?: Pick<Replicate, 'predictions'>,
+): Promise<GeneratePreviewSubmissionResponse> => {
   try {
   const client = replicateClient || replicate;
 
@@ -162,16 +166,14 @@ export const generateSsDesignPreview = async (
 
     const prompt = buildSsDesignPrompt(category, promptInstruction);
 
-    const output = await client.run(REPLICATE_MODEL, {
+    const prediction = await client.predictions.create({
+      version:
+        '2275e825ae9ed8a17168e0ea82ae6722fe60ca25652bb9e61b98887eb0ad5bcc',
       input: {
         // Image 1 is the original construction photo; image 2 is the SS design.
         image: [customerImageUrl, designImageUrl],
         prompt,
-
-        // Preserve the uploaded photo's aspect ratio.
         aspect_ratio: 'match_input_image',
-
-        // Prioritize instruction following and detailed architectural placement.
         go_fast: false,
         true_cfg_scale: 6,
         num_inference_steps: 50,
@@ -179,10 +181,9 @@ export const generateSsDesignPreview = async (
         output_quality: 100,
       },
     });
-    const generatedUrl = getOutputUrl(output);
-
     return {
-      generatedUrl,
+      predictionId: prediction.id,
+      status: prediction.status,
     };
   } catch (error: any) {
     console.error('SS AI preview generation failed:', {
@@ -201,6 +202,33 @@ export const generateSsDesignPreview = async (
   }
 };
 
+export const getSsDesignPreviewStatus = async (
+  predictionId: string,
+  replicateClient?: Pick<Replicate, 'predictions'>,
+): Promise<GeneratePreviewStatusResponse> => {
+  if (!predictionId) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Prediction ID is required.');
+  }
+
+  const client = replicateClient || replicate;
+  const prediction = await client.predictions.get(predictionId);
+  const result: GeneratePreviewStatusResponse = {
+    predictionId: prediction.id,
+    status: prediction.status,
+  };
+
+  if (prediction.status === 'succeeded') {
+    result.generatedUrl = getOutputUrl(prediction.output);
+  }
+
+  if (prediction.status === 'failed' || prediction.status === 'canceled') {
+    result.error = prediction.error
+      ? String(prediction.error)
+      : 'Image generation failed.';
+  }
+
+  return result;
+};
 // export const getOutputUrl = (output: unknown): string => {
 //   const value = Array.isArray(output) ? output[0] : output;
 
@@ -235,7 +263,7 @@ export const generateSsDesignPreview = async (
 //   data: GeneratePreviewInput,
 //   userId?: string,
 //   userRole?: string,
-//   replicateClient?: { run: (...args: any[]) => Promise<any> },
+//   replicateClient?: Pick<Replicate, 'predictions'>,
 // ): Promise<GeneratePreviewResponse> {
 //   const client = replicateClient || replicate;
 

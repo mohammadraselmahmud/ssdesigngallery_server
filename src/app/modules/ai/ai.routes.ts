@@ -22,4 +22,9 @@ router.post(
   aiControllers.ssPreview,
 );
 
+router.get(
+  '/ss-preview/:predictionId',
+  auth(...allowedRoles),
+  aiControllers.ssPreviewStatus,
+);
 export const aiRoutes = router;
