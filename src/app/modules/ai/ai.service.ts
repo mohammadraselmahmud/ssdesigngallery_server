@@ -33,7 +33,7 @@ const replicate = new Replicate({
   auth: config?.replicate_api_key,
 });
 
-export const REPLICATE_MODEL = 'google/nano-banana-pro';
+export const REPLICATE_MODEL = 'black-forest-labs/flux-2-pro';
 
 export const generateSsDesignPreview = async (
   payload: GeneratePreviewInput,
@@ -169,7 +169,7 @@ export const generateSsDesignPreview = async (
       model: REPLICATE_MODEL,
       input: {
         // Image 1 is the original construction photo; image 2 is the SS design.
-        image_input: [customerImageUrl, designImageUrl],
+        input_images: [customerImageUrl, designImageUrl],
         prompt,
         aspect_ratio: 'match_input_image',
         output_format: 'jpg',
