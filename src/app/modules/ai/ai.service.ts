@@ -33,7 +33,7 @@ const replicate = new Replicate({
   auth: config?.replicate_api_key,
 });
 
-export const REPLICATE_MODEL = 'google/nano-banana';
+export const REPLICATE_MODEL = 'google/nano-banana-pro';
 
 export const generateSsDesignPreview = async (
   payload: GeneratePreviewInput,
