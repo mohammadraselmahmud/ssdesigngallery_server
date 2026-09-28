@@ -5,9 +5,9 @@ import validateRequest from '../../middleware/validateRequest';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { USER_ROLE } from '../user/user.constants';
-import { getContents, updateContents } from './contents.service';
+import { getContents, toggleAiGeneration } from './contents.service';
 
-export const updateContentsSchema = z.object({
+export const toggleAiGenerationSchema = z.object({
   body: z.object({ isAiGenerationEnabled: z.boolean() }).strict(),
 });
 
@@ -26,15 +26,15 @@ router.get(
 );
 
 router.patch(
-  '/',
+  '/toggle',
   auth(USER_ROLE.admin, USER_ROLE.super_admin),
-  validateRequest(updateContentsSchema),
+  validateRequest(toggleAiGenerationSchema),
   catchAsync(async (req, res) => {
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: 'Contents updated successfully.',
-      data: await updateContents(req.body.turnOffAiOption),
+      message: 'AI generation setting toggled successfully.',
+      data: await toggleAiGeneration(req.body.isAiGenerationEnabled),
     });
   }),
 );
