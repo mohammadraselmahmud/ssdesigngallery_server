@@ -11,13 +11,14 @@ export interface GeneratePreviewInput {
   category: string;
 }
 
-export interface GeneratePreviewResponse {
-  generatedUrl: string;
-  subscriptionId?: string;
-  totalCredit?: number;
-  usedCredit?: number;
-  remainingCredit?: number;
-  freeAiImageCount?: number;
-  freeAiImageLimit?: number;
-  unlimited?: boolean;
+export interface GeneratePreviewSubmissionResponse {
+  predictionId: string;
+  status: string;
+}
+
+export interface GeneratePreviewStatusResponse {
+  predictionId: string;
+  status: string;
+  generatedUrl?: string;
+  error?: string;
 }

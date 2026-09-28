@@ -15,7 +15,6 @@ const {
 } = require('../src/app/modules/ai/visitingCard.service');
 const Subscription =
   require('../src/app/modules/subscription/subscription.models').default;
-const { User } = require('../src/app/modules/user/user.models');
 
 process.env.IMG_BASE_URL = 'https://cards.example.com';
 const payload = {
@@ -62,10 +61,6 @@ test('reserves credits, refunds failures, and blocks exhausted users', async t =
     lean: async () => null,
   }));
   t.mock.method(Subscription, 'exists', async () => null);
-  t.mock.method(User, 'findOneAndUpdate', () => ({
-    lean: async () => ({ freeAiImageCount: 1 }),
-  }));
-  const refundFree = t.mock.method(User, 'updateOne', async () => ({}));
   const refundPaid = t.mock.method(Subscription, 'updateOne', async () => ({}));
   const failingClient = {
     run: async () => {
@@ -76,15 +71,16 @@ test('reserves credits, refunds failures, and blocks exhausted users', async t =
     generateVisitingCard(payload, 'id', 'user', failingClient),
     /Failed to generate/,
   );
-  assert.deepEqual(refundFree.mock.calls[0].arguments[1], {
-    $inc: { freeAiImageCount: -1 },
-  });
+  assert.equal(refundPaid.mock.callCount(), 0);
 
   const success = await generateVisitingCard(payload, 'id', 'user', {
     run: async () => 'https://output.example/card.png',
   });
-  assert.equal(success.freeAiImageCount, 1);
-  assert.equal(refundFree.mock.callCount(), 1);
+  assert.deepEqual(success, {
+    generatedUrl: 'https://output.example/card.png',
+    unlimited: false,
+  });
+  assert.equal(refundPaid.mock.callCount(), 0);
 
   Subscription.findOneAndUpdate.mock.mockImplementation(() => ({
     lean: async () => ({
@@ -109,14 +105,6 @@ test('reserves credits, refunds failures, and blocks exhausted users', async t =
   await assert.rejects(
     generateVisitingCard(payload, 'id', 'user', failingClient),
     /exhausted/,
-  );
-  Subscription.exists.mock.mockImplementation(async () => null);
-  User.findOneAndUpdate.mock.mockImplementation(() => ({
-    lean: async () => null,
-  }));
-  await assert.rejects(
-    generateVisitingCard(payload, 'id', 'user', failingClient),
-    /2 free AI images/,
   );
   await assert.rejects(
     generateVisitingCard(payload, undefined, 'admin', failingClient),

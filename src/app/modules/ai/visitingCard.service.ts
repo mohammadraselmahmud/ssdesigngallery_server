@@ -3,8 +3,7 @@ import httpStatus from 'http-status';
 import config from '../../config';
 import AppError from '../../error/AppError';
 import Subscription from '../subscription/subscription.models';
-import { User } from '../user/user.models';
-import { GeneratePreviewResponse } from './ai.interface';
+// import { GeneratePreviewResponse } from './ai.interface';
 import { GenerateVisitingCardInput } from './ai.validation';
 import { buildVisitingCardPrompt, getOutputUrl } from './ai.utils';
 import { assertAiGenerationEnabled } from '../contents/contents.service';
@@ -17,7 +16,7 @@ export const generateVisitingCard = async (
   userId?: string,
   userRole?: string,
   client: ImageClient = replicate,
-): Promise<GeneratePreviewResponse> => {
+) => {
   if (!userId) {
     throw new AppError(
       httpStatus.UNAUTHORIZED,
@@ -36,9 +35,8 @@ export const generateVisitingCard = async (
   const unlimited = ['admin', 'sub_admin', 'super_admin'].includes(
     userRole || '',
   );
-  const credit: GeneratePreviewResponse = { generatedUrl: '', unlimited };
+  const credit = { generatedUrl: '', unlimited };
   let subscriptionId: string | undefined;
-  let freeSlotReserved = false;
 
   if (!unlimited) {
     const activeFilter = {
@@ -69,26 +67,6 @@ export const generateVisitingCard = async (
           'Your subscription credit limit has been exhausted. Please renew or upgrade your plan.',
         );
       }
-      const user = await User.findOneAndUpdate(
-        {
-          _id: userId,
-          $or: [
-            { freeAiImageCount: { $lt: 2 } },
-            { freeAiImageCount: { $exists: false } },
-          ],
-        },
-        { $inc: { freeAiImageCount: 1 } },
-        { new: true, projection: { freeAiImageCount: 1 } },
-      ).lean();
-      if (!user) {
-        throw new AppError(
-          httpStatus.PAYMENT_REQUIRED,
-          'You have used your 2 free AI images. Please subscribe to continue generating images.',
-        );
-      }
-      freeSlotReserved = true;
-      credit.freeAiImageCount = user.freeAiImageCount;
-      credit.freeAiImageLimit = 2;
     }
   }
 
@@ -114,14 +92,12 @@ export const generateVisitingCard = async (
     }
     return { ...credit, generatedUrl };
   } catch (error) {
-    // Failed generations must not consume a paid credit or a free image slot.
+    // Failed generations must not consume a paid credit.
     if (subscriptionId) {
       await Subscription.updateOne(
         { _id: subscriptionId },
         { $inc: { usedCredit: -1, remainingCredit: 1 } },
       );
-    } else if (freeSlotReserved) {
-      await User.updateOne({ _id: userId }, { $inc: { freeAiImageCount: -1 } });
     }
     if (error instanceof AppError) throw error;
     throw new AppError(

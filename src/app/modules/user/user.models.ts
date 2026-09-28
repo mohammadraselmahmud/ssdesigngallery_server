@@ -52,11 +52,6 @@ const userSchema: Schema<IUser> = new Schema(
       enum: Role,
       default: USER_ROLE.user,
     },
-    freeAiImageCount: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
   },
   {
     timestamps: true,

@@ -22,11 +22,9 @@ router.post(
   aiControllers.ssPreview,
 );
 
-router.post(
-  '/visiting-card',
+router.get(
+  '/ss-preview/:predictionId',
   auth(...allowedRoles),
-  validateRequest(aiValidation.generateVisitingCardSchema),
-  aiControllers.visitingCard,
+  aiControllers.ssPreviewStatus,
 );
-
 export const aiRoutes = router;

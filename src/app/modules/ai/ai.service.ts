@@ -5,8 +5,11 @@ import Subscription from '../subscription/subscription.models';
 import { IPackage } from '../package/package.interface';
 import AppError from '../../error/AppError';
 import httpStatus from 'http-status';
-import { User } from '../user/user.models';
-import { GeneratePreviewInput, GeneratePreviewResponse } from './ai.interface';
+import {
+  GeneratePreviewInput,
+  GeneratePreviewStatusResponse,
+  GeneratePreviewSubmissionResponse,
+} from './ai.interface';
 import { buildSsDesignPrompt, getOutputUrl } from './ai.utils';
 import { assertAiGenerationEnabled } from '../contents/contents.service';
 import { Contents } from '../contents/contents.models';
@@ -23,22 +26,20 @@ import { Contents } from '../contents/contents.models';
 //   totalCredit?: number;
 //   usedCredit?: number;
 //   remainingCredit?: number;
-//   freeAiImageCount?: number;
-//   freeAiImageLimit?: number;
 //   unlimited?: boolean;
 // }
 const replicate = new Replicate({
   auth: config?.replicate_api_key,
 });
 
-export const REPLICATE_MODEL = 'prunaai/p-image-edit';
+export const REPLICATE_MODEL = 'black-forest-labs/flux-2-pro';
 
 export const generateSsDesignPreview = async (
   payload: GeneratePreviewInput,
   userId?: string,
-  userRole?: string,
-  replicateClient?: { run: (...args: any[]) => Promise<any> },
-): Promise<GeneratePreviewResponse> => {
+    userRole?: string,
+    replicateClient?: Pick<Replicate, 'predictions'>,
+): Promise<GeneratePreviewSubmissionResponse> => {
   try {
 
     const contents = await Contents.findOne({})
@@ -148,31 +149,19 @@ export const generateSsDesignPreview = async (
 
     const prompt = buildSsDesignPrompt(category, promptInstruction);
 
-    const output = await client.run(REPLICATE_MODEL, {
+    const prediction = await client.predictions.create({
+      model: REPLICATE_MODEL,
       input: {
-        // Main/customer image MUST be first
-        images: [customerImageUrl, designImageUrl],
-
+        // Image 1 is the original construction photo; image 2 is the SS design.
+        input_images: [customerImageUrl, designImageUrl],
         prompt,
-
-        // Maintain customer's photo ratio
         aspect_ratio: 'match_input_image',
-
-        // SS placement is a complex architectural edit.
-        // false generally gives the model more room for quality.
-        turbo: false,
-
-        no_op: false,
-
-        // Keep safety checker enabled
-        disable_safety_checker: false,
+        output_format: 'jpg',
       },
     });
-
-    const generatedUrl = getOutputUrl(output);
-
     return {
-      generatedUrl,
+      predictionId: prediction.id,
+      status: prediction.status,
     };
   } catch (error: any) {
     console.error('SS AI preview generation failed:', {
@@ -191,6 +180,33 @@ export const generateSsDesignPreview = async (
   }
 };
 
+export const getSsDesignPreviewStatus = async (
+  predictionId: string,
+  replicateClient?: Pick<Replicate, 'predictions'>,
+): Promise<GeneratePreviewStatusResponse> => {
+  if (!predictionId) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Prediction ID is required.');
+  }
+
+  const client = replicateClient || replicate;
+  const prediction = await client.predictions.get(predictionId);
+  const result: GeneratePreviewStatusResponse = {
+    predictionId: prediction.id,
+    status: prediction.status,
+  };
+
+  if (prediction.status === 'succeeded') {
+    result.generatedUrl = getOutputUrl(prediction.output);
+  }
+
+  if (prediction.status === 'failed' || prediction.status === 'canceled') {
+    result.error = prediction.error
+      ? String(prediction.error)
+      : 'Image generation failed.';
+  }
+
+  return result;
+};
 // export const getOutputUrl = (output: unknown): string => {
 //   const value = Array.isArray(output) ? output[0] : output;
 
@@ -225,7 +241,7 @@ export const generateSsDesignPreview = async (
 //   data: GeneratePreviewInput,
 //   userId?: string,
 //   userRole?: string,
-//   replicateClient?: { run: (...args: any[]) => Promise<any> },
+//   replicateClient?: Pick<Replicate, 'predictions'>,
 // ): Promise<GeneratePreviewResponse> {
 //   const client = replicateClient || replicate;
 
@@ -272,8 +288,6 @@ export const generateSsDesignPreview = async (
 //   let totalCredit: number | undefined;
 //   let usedCredit: number | undefined;
 //   let remainingCredit: number | undefined;
-//   let freeAiImageCount: number | undefined;
-//   let freeSlotReserved = false;
 
 //   if (subscription) {
 //     const pkg = subscription.package as IPackage;
@@ -295,28 +309,6 @@ export const generateSsDesignPreview = async (
 //         'Your subscription credit limit has been exhausted. Please renew or upgrade your plan.',
 //       );
 //     }
-//   } else if (!isUnlimitedUser) {
-//     const freeUser = await User.findOneAndUpdate(
-//       {
-//         _id: userId,
-//         $or: [
-//           { freeAiImageCount: { $lt: 2 } },
-//           { freeAiImageCount: { $exists: false } },
-//         ],
-//       },
-//       { $inc: { freeAiImageCount: 1 } },
-//       { new: true, projection: { freeAiImageCount: 1 } },
-//     ).lean();
-
-//     if (!freeUser) {
-//       throw new AppError(
-//         httpStatus.PAYMENT_REQUIRED,
-//         'You have used your 2 free AI images. Please subscribe to continue generating images.',
-//       );
-//     }
-
-//     freeAiImageCount = freeUser.freeAiImageCount;
-//     freeSlotReserved = true;
 //   }
 
 //   // const basePrompt =
@@ -374,9 +366,6 @@ export const generateSsDesignPreview = async (
 //       },
 //     });
 //   } catch (error) {
-//     if (freeSlotReserved) {
-//       await User.updateOne({ _id: userId }, { $inc: { freeAiImageCount: -1 } });
-//     }
 //     throw error;
 //   }
 
@@ -384,9 +373,6 @@ export const generateSsDesignPreview = async (
 //   try {
 //     generatedUrl = getOutputUrl(output);
 //   } catch (error) {
-//     if (freeSlotReserved) {
-//       await User.updateOne({ _id: userId }, { $inc: { freeAiImageCount: -1 } });
-//     }
 //     throw error;
 //   }
 
@@ -413,8 +399,6 @@ export const generateSsDesignPreview = async (
 //     totalCredit,
 //     usedCredit,
 //     remainingCredit,
-//     freeAiImageCount,
-//     freeAiImageLimit: 2,
 //     unlimited: isUnlimitedUser,
 //   };
 // }
