@@ -7,10 +7,6 @@ import sendResponse from '../../utils/sendResponse';
 import { USER_ROLE } from '../user/user.constants';
 import { getContents, toggleAiGeneration } from './contents.service';
 
-export const toggleAiGenerationSchema = z.object({
-  body: z.object({ isAiGenerationEnabled: z.boolean() }).strict(),
-});
-
 const router = Router();
 
 router.get(
@@ -28,7 +24,6 @@ router.get(
 router.patch(
   '/toggle',
   auth(USER_ROLE.admin, USER_ROLE.super_admin),
-  validateRequest(toggleAiGenerationSchema),
   catchAsync(async (req, res) => {
     sendResponse(res, {
       statusCode: 200,
