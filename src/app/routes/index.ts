@@ -13,9 +13,14 @@ import { couponRoutes } from '../modules/coupon/coupon.route';
 import { adminDashboardRoutes } from '../modules/adminDashboard/adminDashboard.route';
 import { aiRoutes } from '../modules/ai/ai.routes';
 import uploadRouter from '../modules/uploads/route';
+import { contentsRoutes } from '../modules/contents/contents.routes';
 
 const router = Router();
 const moduleRoutes = [
+  {
+    path: '/contents',
+    route: contentsRoutes,
+  },
   {
     path: '/upload',
     route: uploadRouter,

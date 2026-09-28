@@ -8,11 +8,13 @@ import httpStatus from 'http-status';
 import { User } from '../user/user.models';
 import { GeneratePreviewInput, GeneratePreviewResponse } from './ai.interface';
 import { buildSsDesignPrompt, getOutputUrl } from './ai.utils';
+import { assertAiGenerationEnabled } from '../contents/contents.service';
+import { Contents } from '../contents/contents.models';
 
 // const replicate = new Replicate({
 //   auth: config?.replicate_api_key,
 // });
-// // export const REPLICATE_MODEL = 'black-forest-labs/flux-2-pro';
+// export const REPLICATE_MODEL = 'black-forest-labs/flux-2-pro';
 // export const REPLICATE_MODEL = 'prunaai/p-image-edit';
 
 // export interface GeneratePreviewResponse {
@@ -34,109 +36,94 @@ export const REPLICATE_MODEL = 'prunaai/p-image-edit';
 export const generateSsDesignPreview = async (
   payload: GeneratePreviewInput,
   userId?: string,
-    userRole?: string,
-    replicateClient?: { run: (...args: any[]) => Promise<any> },
+  userRole?: string,
+  replicateClient?: { run: (...args: any[]) => Promise<any> },
 ): Promise<GeneratePreviewResponse> => {
   try {
-  const client = replicateClient || replicate;
 
-  if (!replicateClient && !config.replicate_api_key) {
-    throw new AppError(
-      httpStatus.INTERNAL_SERVER_ERROR,
-      'REPLICATE_API_TOKEN is not configured.',
-    );
-  }
-
-  if (!userId) {
-    throw new AppError(
-      httpStatus.UNAUTHORIZED,
-      'User authentication required to generate AI preview.',
-    );
-  }
-
-  const isUnlimitedUser = ['admin', 'sub_admin', 'super_admin'].includes(
-    userRole || '',
-  );
-
-  const now = new Date();
-  const subscription = isUnlimitedUser
-    ? null
-    : await (async () => {
-        await Subscription.updateMany(
-          {
-            user: userId,
-            status: 'active',
-            endDate: { $lte: now },
-            isDeleted: false,
-          },
-          { $set: { status: 'expired' } },
-        );
-
-        return Subscription.findOne({
-          user: userId,
-          status: 'active',
-          endDate: { $gt: now },
-          isDeleted: false,
-        }).populate('package');
-      })();
-
-  let totalCredit: number | undefined;
-  let usedCredit: number | undefined;
-  let remainingCredit: number | undefined;
-  let freeAiImageCount: number | undefined;
-  let freeSlotReserved = false;
-
-  if (subscription) {
-    const pkg = subscription.package as IPackage;
-    totalCredit =
-      subscription.totalCredit !== undefined &&
-      subscription.totalCredit !== null
-        ? subscription.totalCredit
-        : pkg?.limit || 0;
-    usedCredit = subscription.usedCredit || 0;
-    remainingCredit =
-      subscription.remainingCredit !== undefined &&
-      subscription.remainingCredit !== null
-        ? subscription.remainingCredit
-        : Math.max(0, totalCredit - usedCredit);
-
-    if (remainingCredit <= 0) {
+    const contents = await Contents.findOne({})
+    if(contents && !contents?.isAiGenerationEnabled){
       throw new AppError(
         httpStatus.FORBIDDEN,
-        'Your subscription credit limit has been exhausted. Please renew or upgrade your plan.',
+        'AI generation is currently disabled. Please try again later.',
       );
     }
-  } else if (!isUnlimitedUser) {
-    const freeUser = await User.findOneAndUpdate(
-      {
-        _id: userId,
-        $or: [
-          { freeAiImageCount: { $lt: 2 } },
-          { freeAiImageCount: { $exists: false } },
-        ],
-      },
-      { $inc: { freeAiImageCount: 1 } },
-      { new: true, projection: { freeAiImageCount: 1 } },
-    ).lean();
 
-    if (!freeUser) {
+
+    const client = replicateClient || replicate;
+
+    await assertAiGenerationEnabled();
+
+    if (!replicateClient && !config.replicate_api_key) {
       throw new AppError(
-        httpStatus.PAYMENT_REQUIRED,
-        'You have used your 2 free AI images. Please subscribe to continue generating images.',
+        httpStatus.INTERNAL_SERVER_ERROR,
+        'REPLICATE_API_TOKEN is not configured.',
       );
     }
 
-    freeAiImageCount = freeUser.freeAiImageCount;
-    freeSlotReserved = true;
-  }
+    if (!userId) {
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        'User authentication required to generate AI preview.',
+      );
+    }
 
+    const isUnlimitedUser = ['admin', 'sub_admin', 'super_admin'].includes(
+      userRole || '',
+    );
 
+    const now = new Date();
+    const subscription = isUnlimitedUser
+      ? null
+      : await (async () => {
+          await Subscription.updateMany(
+            {
+              user: userId,
+              status: 'active',
+              endDate: { $lte: now },
+              isDeleted: false,
+            },
+            { $set: { status: 'expired' } },
+          );
 
+          return Subscription.findOne({
+            user: userId,
+            status: 'active',
+            endDate: { $gt: now },
+            isDeleted: false,
+          }).populate('package');
+        })();
+
+    let totalCredit: number | undefined;
+    let usedCredit: number | undefined;
+    let remainingCredit: number | undefined; 
+
+    if (subscription) {
+      const pkg = subscription.package as IPackage;
+      totalCredit =
+        subscription.totalCredit !== undefined &&
+        subscription.totalCredit !== null
+          ? subscription.totalCredit
+          : pkg?.limit || 0;
+      usedCredit = subscription.usedCredit || 0;
+      remainingCredit =
+        subscription.remainingCredit !== undefined &&
+        subscription.remainingCredit !== null
+          ? subscription.remainingCredit
+          : Math.max(0, totalCredit - usedCredit);
+
+      if (remainingCredit <= 0) {
+        throw new AppError(
+          httpStatus.FORBIDDEN,
+          'Your subscription credit limit has been exhausted. Please renew or upgrade your plan.',
+        );
+      }
+    }
 
     //=================================================================================
     const {
       userImageUrl: customerImageUrl,
-      ssDesignUrl:designImageUrl,
+      ssDesignUrl: designImageUrl,
       promptInstruction,
       category,
     } = payload;

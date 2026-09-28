@@ -22,4 +22,11 @@ router.post(
   aiControllers.ssPreview,
 );
 
+router.post(
+  '/visiting-card',
+  auth(...allowedRoles),
+  validateRequest(aiValidation.generateVisitingCardSchema),
+  aiControllers.visitingCard,
+);
+
 export const aiRoutes = router;

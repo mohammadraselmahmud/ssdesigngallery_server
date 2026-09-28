@@ -18,6 +18,33 @@
   ],
   "item": [
     {
+      "name": "AI",
+      "item": [
+        {
+          "name": "Generate Visiting Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"demoImageUrl\": \"https://YOUR_CONFIGURED_IMAGE_HOST/demo-card.jpg\",\n  \"information\": {\n    \"name\": \"Nazmul Hasan\",\n    \"designation\": \"Software Engineer\",\n    \"companyName\": \"SS Design Gallery\",\n    \"phone\": \"+8801700000000\",\n    \"email\": \"nazmul@example.com\",\n    \"website\": \"www.example.com\",\n    \"address\": \"Dhaka, Bangladesh\",\n    \"tagline\": \"Quality design services\"\n  },\n  \"promptInstruction\": \"Keep the demo card colors and layout.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/visiting-card",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "visiting-card"]
+            },
+            "description": "First upload the demo image using POST /upload/single (multipart field: file). Use its HTTPS URL from the configured S3 image host as demoImageUrl. information.name is required; all other listed information fields and promptInstruction are optional. additionalDetails can contain up to 1500 characters. Returns data.generatedUrl and credit metadata. Shares the existing two free AI images/subscription credits; admins are unlimited. Failed generations refund the reserved credit."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Ads",
       "item": [
         {

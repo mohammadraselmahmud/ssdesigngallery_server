@@ -3,8 +3,27 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import httpStatus from 'http-status';
 import { generateSsDesignPreview } from './ai.service';
+import { generateVisitingCard } from './visitingCard.service';
+import { aiValidation } from './ai.validation';
 
-const ssPreview = catchAsync(async (req: Request, res: Response) => { 
+const visitingCard = catchAsync(async (req: Request, res: Response) => {
+  const { body } = aiValidation.generateVisitingCardSchema.parse({
+    body: req.body,
+  });
+  const result = await generateVisitingCard(
+    body,
+    req.user?.userId || req.user?.id,
+    req.user?.role,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Visiting card generated successfully',
+    data: result,
+  });
+});
+
+const ssPreview = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.userId || req.user?.id;
 
   const result = await generateSsDesignPreview(
@@ -22,6 +41,7 @@ const ssPreview = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const aiControllers = {
+  visitingCard,
   ssPreview,
 };
 // export async function handleSSPreview(req: Request, res: Response) {

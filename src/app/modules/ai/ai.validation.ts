@@ -67,7 +67,8 @@ const imageUrlSchema = z
       }
     },
     {
-      message: 'Image URL must be a direct URL from the configured S3 image host',
+      message:
+        'Image URL must be a direct URL from the configured S3 image host',
     },
   );
 
@@ -84,7 +85,36 @@ const generatePreviewSchema = z.object({
   }),
 });
 
+const cardText = z.string().trim().min(1).max(300);
+
+const generateVisitingCardSchema = z.object({
+  body: z
+    .object({
+      demoImageUrl: imageUrlSchema,
+      information: z
+        .object({
+          name: cardText,
+          designation: cardText.optional(),
+          companyName: cardText.optional(),
+          phone: cardText.optional(),
+          email: z.string().trim().email().max(254).optional(),
+          website: cardText.optional(),
+          address: z.string().trim().min(1).max(600).optional(),
+          tagline: cardText.optional(),
+          additionalDetails: z.string().trim().min(1).max(1500).optional(),
+        })
+        .strict(),
+      promptInstruction: z.string().trim().max(1000).optional(),
+    })
+    .strict(),
+});
+
+export type GenerateVisitingCardInput = z.infer<
+  typeof generateVisitingCardSchema
+>['body'];
+
 export const aiValidation = {
+  generateVisitingCardSchema,
   generatePreviewSchema,
   getAllowedImageHosts,
 };
